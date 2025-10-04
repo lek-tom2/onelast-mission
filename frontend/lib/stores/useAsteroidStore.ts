@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { ImpactScenario, Asteroid, CameraState } from '../types/asteroid';
 import * as THREE from 'three';
 
+export type SortOption = 'nearest' | 'furthest' | 'highest_energy' | 'lowest_energy' | 'largest' | 'smallest' | 'most_dangerous' | 'least_dangerous';
+export type FilterOption = 'all' | 'hazardous' | 'close_approach' | 'high_energy' | 'large_size';
+
 interface AsteroidStore {
   // State
   selectedScenario: ImpactScenario | null;
@@ -11,6 +14,11 @@ interface AsteroidStore {
   isPlaying: boolean;
   showTrajectories: boolean;
   showConsequences: boolean;
+  
+  // Filtering and sorting
+  sortOption: SortOption;
+  filterOption: FilterOption;
+  selectedCity: { lat: number; lng: number; name: string } | null;
   
   // Actions
   selectScenario: (scenario: ImpactScenario) => void;
@@ -23,6 +31,11 @@ interface AsteroidStore {
   toggleTrajectories: () => void;
   toggleConsequences: () => void;
   generateRandomAsteroids: (count: number) => void;
+  
+  // Filtering and sorting actions
+  setSortOption: (option: SortOption) => void;
+  setFilterOption: (option: FilterOption) => void;
+  setSelectedCity: (city: { lat: number; lng: number; name: string } | null) => void;
 }
 
 export const useAsteroidStore = create<AsteroidStore>((set) => ({
@@ -39,6 +52,11 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
   isPlaying: false,
   showTrajectories: true,
   showConsequences: true,
+  
+  // Filtering and sorting
+  sortOption: 'nearest',
+  filterOption: 'all',
+  selectedCity: null,
 
   // Actions
   selectScenario: (scenario) => set({ selectedScenario: scenario }),
@@ -99,5 +117,10 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
     }
     
     set({ asteroids });
-  }
+  },
+  
+  // Filtering and sorting actions
+  setSortOption: (option) => set({ sortOption: option }),
+  setFilterOption: (option) => set({ filterOption: option }),
+  setSelectedCity: (city) => set({ selectedCity: city })
 }));

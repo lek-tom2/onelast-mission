@@ -1,8 +1,11 @@
 'use client';
-import { useState } from 'react';
-import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
+import { useState, useMemo } from 'react';
+import { useAsteroidStore, SortOption, FilterOption } from '@/lib/stores/useAsteroidStore';
 import { ImpactScenario } from '@/lib/types/asteroid';
 import DatePicker from './DatePicker';
+import CitySelector from './CitySelector';
+import { sortAsteroids, filterAsteroids, getThreatLevel, getThreatColor, formatDistance, formatEnergy } from '@/lib/utils/asteroidUtils';
+import { recalculateImpactForCity } from '@/lib/services/impactCalculator';
 
 interface ScenarioPanelProps {
   scenarios: ImpactScenario[];
@@ -12,9 +15,36 @@ interface ScenarioPanelProps {
 }
 
 export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, onDateChange }: ScenarioPanelProps) {
-  const { selectedScenario, selectedAsteroidDetails, showTrajectories, showConsequences, toggleTrajectories, toggleConsequences, selectAsteroidDetails } = useAsteroidStore();
+  const { 
+    selectedScenario, 
+    selectedAsteroidDetails, 
+    showTrajectories, 
+    showConsequences, 
+    toggleTrajectories, 
+    toggleConsequences, 
+    selectAsteroidDetails,
+    sortOption,
+    filterOption,
+    selectedCity,
+    setSortOption,
+    setFilterOption,
+    setSelectedCity
+  } = useAsteroidStore();
   const [isExpanded, setIsExpanded] = useState(true);
   const [showTrajectoryDetails, setShowTrajectoryDetails] = useState(false);
+
+  // Process and filter scenarios
+  const processedScenarios = useMemo(() => {
+    let processed = [...scenarios];
+    
+    // Apply filters
+    processed = filterAsteroids(processed, filterOption);
+    
+    // Apply sorting
+    processed = sortAsteroids(processed, sortOption);
+    
+    return processed;
+  }, [scenarios, filterOption, sortOption]);
 
   return (
     <div className="h-full w-96 bg-black/90 backdrop-blur-sm text-white flex flex-col flex-shrink-0">
