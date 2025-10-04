@@ -76,7 +76,7 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
   return (
     <div className="absolute top-4 right-4 bg-black/90 backdrop-blur-sm rounded-lg p-6 text-white min-w-96 max-w-lg max-h-[90vh] overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-4">
         <h2 className="text-2xl font-bold text-red-400">Asteroid Details</h2>
         <div className="flex items-center gap-3">
           {onLaunch && (
@@ -84,10 +84,10 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
               onClick={handleLaunch}
               disabled={isLaunching || !hasImpactPoint}
               className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${isLaunching
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                  : !hasImpactPoint
-                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                    : 'bg-red-600 hover:bg-red-700 text-white hover:scale-105'
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : !hasImpactPoint
+                  ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                  : 'bg-red-600 hover:bg-red-700 text-white hover:scale-105'
                 }`}
               title={!hasImpactPoint ? 'Click on Earth to select impact point first' : 'Launch asteroid to selected impact point'}
             >
@@ -104,7 +104,7 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
       </div>
 
       {/* City Selection for Impact Calculation */}
-      <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+      <div className="mb-6 p-4 bg-black/90rounded-lg">
         <h3 className="text-lg font-semibold mb-3">Impact City Selection</h3>
         <div className="mb-3">
           <CitySelector
@@ -133,11 +133,11 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
       </div>
 
       {/* Asteroid 3D Preview */}
-      <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+      <div className="mb-6 p-4 bg-black/90 rounded-lg">
         <h3 className="text-lg font-semibold mb-3">Asteroid Preview</h3>
-        <div className="flex items-center justify-center h-32 bg-gray-900 rounded">
+        <div className="flex items-center justify-center h-32 bg-[#111111] rounded">
           <div
-            className="w-16 h-16 rounded-full border-4 border-gray-600 flex items-center justify-center text-2xl"
+            className="w-16 h-16 rounded-full border-4 bg-black/90 flex items-center justify-center text-2xl"
             style={{
               backgroundColor: getAsteroidTexture(displayScenario.energy),
               boxShadow: `0 0 20px ${getAsteroidTexture(displayScenario.energy)}`
