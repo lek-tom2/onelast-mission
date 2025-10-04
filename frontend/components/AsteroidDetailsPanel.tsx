@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ImpactScenario } from '@/lib/types/asteroid';
 import CitySelector from './CitySelector';
 import { recalculateImpactForCity } from '@/lib/services/impactCalculator';
+import { populationDensityService } from '@/lib/services/populationDensityService';
 
 interface AsteroidDetailsPanelProps {
   scenario: ImpactScenario | null;
@@ -15,12 +16,25 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
   
   if (!scenario) return null;
 
-  // Debug logging to see what data we're getting
-  console.log('AsteroidDetailsPanel - scenario:', scenario);
-  console.log('AsteroidDetailsPanel - nasaData:', scenario.nasaData);
+  // Debug: Log the scenario data to see what we're getting
+  console.log('AsteroidDetailsPanel - scenario ID:', scenario.id);
+  console.log('AsteroidDetailsPanel - scenario name:', scenario.name);
+  console.log('AsteroidDetailsPanel - NASA data ID:', scenario.nasaData?.id);
+  console.log('AsteroidDetailsPanel - NASA data name:', scenario.nasaData?.name);
 
   // Use calculated scenario if available, otherwise use original
   const displayScenario = calculatedScenario || scenario;
+  
+  // Calculate population-based casualties if a city is selected
+  const populationImpact = selectedCity && displayScenario ? 
+    populationDensityService.calculateImpactCasualties(
+      selectedCity.lat,
+      selectedCity.lng,
+      displayScenario.blastRadius,
+      displayScenario.blastRadius * 2, // thermal radius
+      displayScenario.blastRadius * 4, // seismic radius
+      displayScenario.energy
+    ) : null;
 
   const getAsteroidTexture = (energy: number) => {
     if (energy > 1000) return '#8B0000'; // Dark red for high energy
@@ -267,6 +281,69 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
                 {displayScenario.consequences.atmosphericEffects.dustCloud && 'Dust Cloud • '}
                 {displayScenario.consequences.atmosphericEffects.climateChange && 'Climate Change • '}
                 {displayScenario.consequences.atmosphericEffects.nuclearWinter && 'Nuclear Winter'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Population Impact Analysis */}
+      {populationImpact && selectedCity && (
+        <div className="space-y-4 mb-6">
+          <h3 className="text-lg font-semibold text-red-400">Population Impact Analysis</h3>
+          <div className="space-y-3">
+            <div className="p-3 bg-red-900/20 rounded border border-red-500">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-red-400 font-semibold">Impact Location:</span>
+                <span className="text-red-300">{selectedCity.name}</span>
+              </div>
+              <div className="text-sm text-gray-300">
+                Coordinates: {selectedCity.lat.toFixed(2)}°N, {selectedCity.lng.toFixed(2)}°E
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Immediate Blast Zone */}
+              <div className="p-3 bg-red-800/20 rounded border border-red-600">
+                <div className="text-red-400 font-semibold text-sm mb-1">Immediate Blast Zone</div>
+                <div className="text-xs text-gray-300 space-y-1">
+                  <div>Population: {populationImpact.immediateBlast.population.toLocaleString()}</div>
+                  <div>Casualties: {populationImpact.immediateBlast.casualties.toLocaleString()}</div>
+                  <div>Casualty Rate: {populationImpact.immediateBlast.casualtyRate.toFixed(1)}%</div>
+                </div>
+              </div>
+
+              {/* Thermal Radiation Zone */}
+              <div className="p-3 bg-orange-800/20 rounded border border-orange-600">
+                <div className="text-orange-400 font-semibold text-sm mb-1">Thermal Radiation Zone</div>
+                <div className="text-xs text-gray-300 space-y-1">
+                  <div>Population: {populationImpact.thermalRadiation.population.toLocaleString()}</div>
+                  <div>Casualties: {populationImpact.thermalRadiation.casualties.toLocaleString()}</div>
+                  <div>Casualty Rate: {populationImpact.thermalRadiation.casualtyRate.toFixed(1)}%</div>
+                </div>
+              </div>
+
+              {/* Seismic Effects Zone */}
+              <div className="p-3 bg-yellow-800/20 rounded border border-yellow-600">
+                <div className="text-yellow-400 font-semibold text-sm mb-1">Seismic Effects Zone</div>
+                <div className="text-xs text-gray-300 space-y-1">
+                  <div>Population: {populationImpact.seismicEffects.population.toLocaleString()}</div>
+                  <div>Casualties: {populationImpact.seismicEffects.casualties.toLocaleString()}</div>
+                  <div>Casualty Rate: {populationImpact.seismicEffects.casualtyRate.toFixed(1)}%</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Impact Summary */}
+            <div className="p-4 bg-gray-800/50 rounded border border-gray-600">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-400 mb-1">
+                  {populationImpact.totalCasualties.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-300 mb-2">Total Estimated Casualties</div>
+                <div className="text-xs text-gray-400">
+                  Out of {populationImpact.totalAffected.toLocaleString()} people affected
+                </div>
               </div>
             </div>
           </div>

@@ -147,10 +147,17 @@ class TrajectoryCalculator {
     const diameter = (nasaObject.estimated_diameter.meters.estimated_diameter_min + 
                      nasaObject.estimated_diameter.meters.estimated_diameter_max) / 2;
     
-    // Calculate impact zones based on energy
-    const immediateBlastRadius = Math.pow(energy, 0.33) * 2; // km
-    const thermalRadius = immediateBlastRadius * 2;
-    const seismicRadius = immediateBlastRadius * 4;
+    // More realistic blast radius calculations based on nuclear weapon scaling
+    // R = 0.28 * E^(1/3) where E is in kilotons, R in km
+    // Convert megatons to kilotons: 1 MT = 1000 kT
+    const energyKiloton = energy * 1000;
+    const immediateBlastRadius = 0.28 * Math.pow(energyKiloton, 1/3); // km
+    
+    // Thermal radiation radius is typically 2-3x the blast radius
+    const thermalRadius = immediateBlastRadius * 2.5; // km
+    
+    // Seismic effects can extend much further, typically 10-20x blast radius
+    const seismicRadius = immediateBlastRadius * 15; // km
     
     // Calculate fatalities (simplified model)
     const immediateFatalities = Math.min(50000000, energy * 10000); // Cap at 50M
@@ -174,16 +181,16 @@ class TrajectoryCalculator {
     
     return {
       immediateBlast: {
-        radius: immediateBlastRadius,
+        radius: Math.round(immediateBlastRadius * 1000) / 1000, // Round to 3 decimal places
         fatalities: immediateFatalities
       },
       thermalRadiation: {
-        radius: thermalRadius,
+        radius: Math.round(thermalRadius * 1000) / 1000,
         fatalities: thermalFatalities
       },
       seismicEffects: {
         magnitude: seismicMagnitude,
-        radius: seismicRadius
+        radius: Math.round(seismicRadius * 1000) / 1000
       },
       tsunami,
       atmosphericEffects
@@ -200,13 +207,6 @@ class TrajectoryCalculator {
     
     // Deep clone the NASA object to avoid reference issues
     const nasaDataClone = JSON.parse(JSON.stringify(nasaObject));
-    
-    console.log('Converting asteroid:', {
-      originalId: nasaObject.id,
-      originalName: nasaObject.name,
-      clonedId: nasaDataClone.id,
-      clonedName: nasaDataClone.name
-    });
     
     return {
       id: nasaObject.id,

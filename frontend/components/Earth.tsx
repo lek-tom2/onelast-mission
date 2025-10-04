@@ -6,6 +6,7 @@ import { useTexture, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
 import { ImpactScenario } from '@/lib/types/asteroid';
+import { populationDensityService } from '@/lib/services/populationDensityService';
 
 interface EarthProps {
   onScenarioSelect?: (scenario: ImpactScenario) => void;
@@ -77,28 +78,48 @@ export default function Earth({ onScenarioSelect }: EarthProps) {
     return { lat, lng };
   };
 
-  // Calculate impact consequences based on asteroid properties
-  const calculateImpactConsequences = (asteroid: ImpactScenario) => {
+  // Calculate impact consequences based on asteroid properties and population density
+  const calculateImpactConsequences = (asteroid: ImpactScenario, impactLat: number, impactLng: number) => {
     const energy = asteroid.energy; // megatons
     const size = asteroid.asteroidSize; // meters
     
-    // Calculate impact zones based on energy (simplified models)
-    const immediateBlastRadius = Math.pow(energy, 0.33) * 2; // km
-    const thermalRadius = immediateBlastRadius * 2; // km
-    const seismicRadius = immediateBlastRadius * 4; // km
-    const craterSize = Math.pow(energy, 0.33) * 0.5; // km
+    // More realistic blast radius calculations based on nuclear weapon scaling
+    // R = 0.28 * E^(1/3) where E is in kilotons, R in km
+    // Convert megatons to kilotons: 1 MT = 1000 kT
+    const energyKiloton = energy * 1000;
+    const immediateBlastRadius = 0.28 * Math.pow(energyKiloton, 1/3); // km
+    
+    // Thermal radiation radius is typically 2-3x the blast radius
+    const thermalRadius = immediateBlastRadius * 2.5; // km
+    
+    // Seismic effects can extend much further, typically 10-20x blast radius
+    const seismicRadius = immediateBlastRadius * 15; // km
+    
+    // Crater size is typically 0.1-0.2x the blast radius
+    const craterSize = immediateBlastRadius * 0.15; // km
     
     // Determine if impact is in water (simplified - check if position is over ocean)
     const isWaterImpact = Math.random() > 0.3; // Simplified - 70% chance it's land
     
-    return {
+    // Calculate population-based casualties
+    const populationImpact = populationDensityService.calculateImpactCasualties(
+      impactLat,
+      impactLng,
       immediateBlastRadius,
       thermalRadius,
       seismicRadius,
-      craterSize,
+      energy
+    );
+    
+    return {
+      immediateBlastRadius: Math.round(immediateBlastRadius * 1000) / 1000, // Round to 3 decimal places
+      thermalRadius: Math.round(thermalRadius * 1000) / 1000,
+      seismicRadius: Math.round(seismicRadius * 1000) / 1000,
+      craterSize: Math.round(craterSize * 1000) / 1000,
       isWaterImpact,
       energy,
-      size
+      size,
+      populationImpact
     };
   };
 
@@ -124,9 +145,13 @@ export default function Earth({ onScenarioSelect }: EarthProps) {
       setImpactPosition(event.point);
       setLocalImpactPosition(event.point); // Since Earth is not rotating, world and local are the same
       
-      // Convert to lat/lng for display
+      // Convert to lat/lng for display and population calculation
       const coords = vector3ToLatLng(event.point);
       console.log(`Impact location: ${coords.lat.toFixed(2)}°N, ${coords.lng.toFixed(2)}°E`);
+      
+      // Get population data for this location
+      const populationData = populationDensityService.getPopulationData(coords.lat, coords.lng);
+      console.log('Population data:', populationData);
     }
   };
 
@@ -179,14 +204,19 @@ export default function Earth({ onScenarioSelect }: EarthProps) {
         </Text>
       )}
 
-      {/* Impact Visualization - Rotates with Earth */}
-      {localImpactPosition && selectedAsteroidDetails && showConsequences && (
-        <ImpactVisualization 
-          position={localImpactPosition}
-          asteroid={selectedAsteroidDetails}
-          consequences={calculateImpactConsequences(selectedAsteroidDetails)}
-        />
-      )}
+          {/* Impact Visualization - Rotates with Earth */}
+          {localImpactPosition && selectedAsteroidDetails && showConsequences && (() => {
+            const coords = vector3ToLatLng(localImpactPosition);
+            const consequences = calculateImpactConsequences(selectedAsteroidDetails, coords.lat, coords.lng);
+            return (
+              <ImpactVisualization 
+                position={localImpactPosition}
+                asteroid={selectedAsteroidDetails}
+                consequences={consequences}
+                coordinates={coords}
+              />
+            );
+          })()}
     </group>
   );
 }
@@ -195,19 +225,21 @@ export default function Earth({ onScenarioSelect }: EarthProps) {
 function ImpactVisualization({ 
   position, 
   asteroid, 
-  consequences 
+  consequences,
+  coordinates
 }: { 
   position: THREE.Vector3; 
   asteroid: ImpactScenario; 
   consequences: any;
+  coordinates: { lat: number; lng: number };
 }) {
-  const { immediateBlastRadius, thermalRadius, seismicRadius, craterSize, isWaterImpact } = consequences;
+  const { immediateBlastRadius, thermalRadius, seismicRadius, craterSize, isWaterImpact, populationImpact } = consequences;
   
   return (
     <group>
       {/* Immediate Blast Radius - Complete Destruction Zone */}
       <mesh position={position}>
-        <sphereGeometry args={[immediateBlastRadius * 0.01, 32, 32]} />
+        <sphereGeometry args={[Math.min(immediateBlastRadius * 0.001, 0.5), 32, 32]} />
         <meshBasicMaterial 
           color="#ff0000" 
           transparent 
@@ -218,18 +250,18 @@ function ImpactVisualization({
       
       {/* Blast Zone Label */}
       <Text
-        position={[immediateBlastRadius * 0.01 + 0.1, 0, 0]}
+        position={[Math.min(immediateBlastRadius * 0.001, 0.5) + 0.1, 0, 0]}
         fontSize={0.05}
         color="#ff0000"
         anchorX="left"
         anchorY="middle"
       >
-        IMMEDIATE BLAST ({immediateBlastRadius.toFixed(1)}km)
+        IMMEDIATE BLAST ({immediateBlastRadius.toFixed(3)}km)
       </Text>
 
       {/* Thermal Radiation Radius - Fire Zone */}
       <mesh position={position}>
-        <sphereGeometry args={[thermalRadius * 0.01, 32, 32]} />
+        <sphereGeometry args={[Math.min(thermalRadius * 0.001, 1.0), 32, 32]} />
         <meshBasicMaterial 
           color="#ff8800" 
           transparent 
@@ -240,18 +272,18 @@ function ImpactVisualization({
       
       {/* Thermal Zone Label */}
       <Text
-        position={[thermalRadius * 0.01 + 0.1, 0, 0]}
+        position={[Math.min(thermalRadius * 0.001, 1.0) + 0.1, 0, 0]}
         fontSize={0.05}
         color="#ff8800"
         anchorX="left"
         anchorY="middle"
       >
-        THERMAL RADIATION ({thermalRadius.toFixed(1)}km)
+        THERMAL RADIATION ({thermalRadius.toFixed(3)}km)
       </Text>
 
       {/* Seismic Effects Radius - Earthquake Zone */}
       <mesh position={position}>
-        <sphereGeometry args={[seismicRadius * 0.01, 32, 32]} />
+        <sphereGeometry args={[Math.min(seismicRadius * 0.001, 2.0), 32, 32]} />
         <meshBasicMaterial 
           color="#ffff00" 
           transparent 
@@ -262,20 +294,20 @@ function ImpactVisualization({
       
       {/* Seismic Zone Label */}
       <Text
-        position={[seismicRadius * 0.01 + 0.1, 0, 0]}
+        position={[Math.min(seismicRadius * 0.001, 2.0) + 0.1, 0, 0]}
         fontSize={0.05}
         color="#ffff00"
         anchorX="left"
         anchorY="middle"
       >
-        SEISMIC EFFECTS ({seismicRadius.toFixed(1)}km)
+        SEISMIC EFFECTS ({seismicRadius.toFixed(3)}km)
       </Text>
 
       {/* Impact Crater - Only show if not in water */}
       {!isWaterImpact && (
         <>
           <mesh position={position}>
-            <sphereGeometry args={[craterSize * 0.01, 16, 16]} />
+            <sphereGeometry args={[Math.min(craterSize * 0.001, 0.3), 16, 16]} />
             <meshBasicMaterial 
               color="#8b4513" 
               transparent 
@@ -285,13 +317,13 @@ function ImpactVisualization({
           
           {/* Crater Label */}
           <Text
-            position={[0, -craterSize * 0.01 - 0.05, 0]}
+            position={[0, -Math.min(craterSize * 0.001, 0.3) - 0.05, 0]}
             fontSize={0.04}
             color="#8b4513"
             anchorX="center"
             anchorY="middle"
           >
-            CRATER ({craterSize.toFixed(1)}km)
+            CRATER ({craterSize.toFixed(3)}km)
           </Text>
         </>
       )}
@@ -300,7 +332,7 @@ function ImpactVisualization({
       {isWaterImpact && (
         <>
           <mesh position={position}>
-            <sphereGeometry args={[seismicRadius * 0.01, 32, 32]} />
+            <sphereGeometry args={[Math.min(seismicRadius * 0.001, 2.0), 32, 32]} />
             <meshBasicMaterial 
               color="#0066cc" 
               transparent 
@@ -310,37 +342,84 @@ function ImpactVisualization({
           </mesh>
           
           <Text
-            position={[0, seismicRadius * 0.01 + 0.1, 0]}
+            position={[0, Math.min(seismicRadius * 0.001, 2.0) + 0.1, 0]}
             fontSize={0.05}
             color="#0066cc"
             anchorX="center"
             anchorY="middle"
           >
-            🌊 TSUNAMI ZONE
+            TSUNAMI ZONE
           </Text>
         </>
       )}
 
-      {/* Asteroid Info */}
-      <Text
-        position={[0, 0.2, 0]}
-        fontSize={0.04}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {asteroid.nasaData?.name || asteroid.name}
-      </Text>
-      
-      <Text
-        position={[0, 0.15, 0]}
-        fontSize={0.03}
-        color="#cccccc"
-        anchorX="center"
-        anchorY="middle"
-      >
-        Energy: {asteroid.energy.toFixed(1)} MT | Size: {asteroid.asteroidSize.toFixed(0)}m
-      </Text>
+          {/* Asteroid Info */}
+          <Text
+            position={[0, 0.2, 0]}
+            fontSize={0.04}
+            color="#ffffff"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {asteroid.nasaData?.name || asteroid.name}
+          </Text>
+          
+          <Text
+            position={[0, 0.15, 0]}
+            fontSize={0.03}
+            color="#cccccc"
+            anchorX="center"
+            anchorY="middle"
+          >
+            Energy: {asteroid.energy.toFixed(1)} MT | Size: {asteroid.asteroidSize.toFixed(0)}m
+          </Text>
+
+          {/* Population Impact Information */}
+          {populationImpact && (
+            <>
+              <Text
+                position={[0, 0.08, 0]}
+                fontSize={0.025}
+                color="#ff6666"
+                anchorX="center"
+                anchorY="middle"
+              >
+                Location: {coordinates.lat.toFixed(1)}°N, {coordinates.lng.toFixed(1)}°E
+              </Text>
+              
+              <Text
+                position={[0, 0.03, 0]}
+                fontSize={0.02}
+                color="#ffaa66"
+                anchorX="center"
+                anchorY="middle"
+              >
+                Total Affected: {populationImpact.totalAffected.toLocaleString()} people
+              </Text>
+              
+              <Text
+                position={[0, -0.02, 0]}
+                fontSize={0.02}
+                color="#ff4444"
+                anchorX="center"
+                anchorY="middle"
+              >
+                Estimated Casualties: {populationImpact.totalCasualties.toLocaleString()}
+              </Text>
+              
+              <Text
+                position={[0, -0.07, 0]}
+                fontSize={0.018}
+                color="#ff8888"
+                anchorX="center"
+                anchorY="middle"
+              >
+                Blast: {populationImpact.immediateBlast.casualties.toLocaleString()} | 
+                Thermal: {populationImpact.thermalRadiation.casualties.toLocaleString()} | 
+                Seismic: {populationImpact.seismicEffects.casualties.toLocaleString()}
+              </Text>
+            </>
+          )}
     </group>
   );
 }
