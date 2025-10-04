@@ -5,6 +5,7 @@ import * as THREE from 'three';
 interface AsteroidStore {
   // State
   selectedScenario: ImpactScenario | null;
+  selectedAsteroidDetails: ImpactScenario | null;
   asteroids: Asteroid[];
   cameraState: CameraState;
   isPlaying: boolean;
@@ -13,6 +14,7 @@ interface AsteroidStore {
   
   // Actions
   selectScenario: (scenario: ImpactScenario) => void;
+  selectAsteroidDetails: (scenario: ImpactScenario | null) => void;
   clearScenario: () => void;
   addAsteroid: (asteroid: Asteroid) => void;
   removeAsteroid: (id: string) => void;
@@ -26,6 +28,7 @@ interface AsteroidStore {
 export const useAsteroidStore = create<AsteroidStore>((set) => ({
   // Initial state
   selectedScenario: null,
+  selectedAsteroidDetails: null,
   asteroids: [],
   cameraState: {
     position: new THREE.Vector3(0, 0, 5),
@@ -39,6 +42,8 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
 
   // Actions
   selectScenario: (scenario) => set({ selectedScenario: scenario }),
+  
+  selectAsteroidDetails: (scenario) => set({ selectedAsteroidDetails: scenario }),
   
   clearScenario: () => set({ selectedScenario: null }),
   

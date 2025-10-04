@@ -16,6 +16,8 @@ export interface ImpactScenario {
   craterSize: number; // km
   trajectory?: AsteroidTrajectory;
   consequences?: ImpactConsequences;
+  nasaData?: any; // NASA API data
+  collisionProbability?: number; // 0-1
 }
 
 

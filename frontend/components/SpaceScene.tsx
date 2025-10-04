@@ -7,6 +7,8 @@ import { ImpactScenario } from '@/lib/types/asteroid';
 import Earth from './Earth';
 import AsteroidField from './AsteroidField';
 import ScenarioPanel from './ScenarioPanel';
+import AsteroidDetailsPanel from './AsteroidDetailsPanel';
+import { nasaDataManager } from '@/lib/services/nasaDataManager';
 import * as THREE from 'three';
 
 // Camera controller component
@@ -37,8 +39,28 @@ function CameraController() {
 
 // Main scene content
 function SceneContent() {
+  const { camera } = useThree();
+  
   const handleScenarioSelect = (scenario: ImpactScenario) => {
     useAsteroidStore.getState().selectScenario(scenario);
+  };
+
+  const focusOnScenario = (scenario: ImpactScenario) => {
+    // Convert lat/lng to 3D position
+    const lat = scenario.position.lat;
+    const lng = scenario.position.lng;
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lng + 180) * (Math.PI / 180);
+    
+    const targetPosition = new THREE.Vector3(
+      -2 * Math.sin(phi) * Math.cos(theta),
+      2 * Math.cos(phi),
+      2 * Math.sin(phi) * Math.sin(theta)
+    );
+    
+    // Smoothly move camera to focus on the scenario
+    camera.position.lerp(targetPosition, 0.1);
+    camera.lookAt(0, 0, 0);
   };
 
   return (
@@ -84,6 +106,32 @@ function SceneContent() {
 }
 
 export default function SpaceScene() {
+  const { selectedAsteroidDetails, selectAsteroidDetails } = useAsteroidStore();
+  const [realScenarios, setRealScenarios] = useState<ImpactScenario[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Load real NASA asteroid data
+  useEffect(() => {
+    const loadRealData = async () => {
+      try {
+        setLoading(true);
+        const data = await nasaDataManager.getRealAsteroidData();
+        setRealScenarios(data.impactScenarios);
+      } catch (error) {
+        console.error('Failed to load real asteroid data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRealData();
+  }, []);
+  
+  const focusOnScenario = (scenario: ImpactScenario) => {
+    // This will be handled by the camera controller
+    console.log('Focusing on scenario:', scenario.name);
+  };
+
   return (
     <div className="w-full h-screen bg-black">
       <Canvas
@@ -97,71 +145,27 @@ export default function SpaceScene() {
       
       {/* UI Overlay */}
       <ScenarioPanel 
-        scenarios={[
-          {
-            id: 'nyc',
-            name: 'New York Impact',
-            position: { lat: 40.7128, lng: -74.0060 },
-            city: 'New York City',
-            asteroidSize: 500,
-            energy: 1000,
-            casualties: 10000000,
-            tsunami: true,
-            blastRadius: 50,
-            craterSize: 5
-          },
-          {
-            id: 'tokyo',
-            name: 'Tokyo Impact', 
-            position: { lat: 35.6762, lng: 139.6503 },
-            city: 'Tokyo',
-            asteroidSize: 300,
-            energy: 500,
-            casualties: 8000000,
-            tsunami: false,
-            blastRadius: 30,
-            craterSize: 3
-          },
-          {
-            id: 'london',
-            name: 'London Impact',
-            position: { lat: 51.5074, lng: -0.1278 },
-            city: 'London',
-            asteroidSize: 400,
-            energy: 750,
-            casualties: 6000000,
-            tsunami: false,
-            blastRadius: 40,
-            craterSize: 4
-          },
-          {
-            id: 'sydney',
-            name: 'Sydney Impact',
-            position: { lat: -33.8688, lng: 151.2093 },
-            city: 'Sydney',
-            asteroidSize: 600,
-            energy: 1200,
-            casualties: 3000000,
-            tsunami: true,
-            blastRadius: 60,
-            craterSize: 6
-          },
-          {
-            id: 'szczecin',
-            name: 'Szczecin Impact',
-            position: { lat: 53.4285, lng: 14.5528 },
-            city: 'Szczecin',
-            asteroidSize: 350,
-            energy: 600,
-            casualties: 2000000,
-            tsunami: false,
-            blastRadius: 35,
-            craterSize: 3.5
-          }
-        ]}
+        scenarios={loading ? [] : realScenarios}
         onScenarioSelect={(scenario) => {
           useAsteroidStore.getState().selectScenario(scenario);
         }}
+        onFocus={focusOnScenario}
+      />
+      
+      {/* Loading indicator */}
+      {loading && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-sm rounded-lg p-4 text-white">
+          <div className="flex items-center space-x-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+            <span>Loading NASA asteroid data...</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Asteroid Details Panel */}
+      <AsteroidDetailsPanel 
+        scenario={selectedAsteroidDetails}
+        onClose={() => selectAsteroidDetails(null)}
       />
     </div>
   );

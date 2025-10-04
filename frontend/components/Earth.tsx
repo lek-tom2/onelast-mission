@@ -16,7 +16,7 @@ export default function Earth({ onScenarioSelect }: EarthProps) {
   const markersRef = useRef<THREE.Group>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const { camera } = useThree();
-  const { selectedScenario, showTrajectories, showConsequences } = useAsteroidStore();
+  const { selectedScenario, selectedAsteroidDetails, showTrajectories, showConsequences, selectAsteroidDetails } = useAsteroidStore();
   
   // Load Earth textures with fallback
   const [earthTexture, bumpMap] = useTexture([
@@ -269,7 +269,12 @@ export default function Earth({ onScenarioSelect }: EarthProps) {
                 scenario={scenario}
                 isHovered={hoveredRegion === scenario.id}
                 onHover={(hovered: boolean) => setHoveredRegion(hovered ? scenario.id : null)}
-                onClick={() => onScenarioSelect && onScenarioSelect(scenario)}
+                onClick={() => {
+                  if (onScenarioSelect) {
+                    onScenarioSelect(scenario);
+                  }
+                  selectAsteroidDetails(scenario);
+                }}
               />
               
               {/* City Label */}
@@ -285,7 +290,7 @@ export default function Earth({ onScenarioSelect }: EarthProps) {
                 </Text>
               )}
 
-              {/* Asteroid Trajectory */}
+              {/* Asteroid Trajectory - Clickable */}
               {showTrajectories && scenario.trajectory && (
                 <Line
                   points={scenario.trajectory.points}
@@ -293,6 +298,12 @@ export default function Earth({ onScenarioSelect }: EarthProps) {
                   lineWidth={3}
                   transparent
                   opacity={0.8}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectAsteroidDetails(scenario);
+                  }}
+                  onPointerOver={() => document.body.style.cursor = 'pointer'}
+                  onPointerOut={() => document.body.style.cursor = 'default'}
                 />
               )}
 
