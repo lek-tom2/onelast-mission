@@ -200,6 +200,61 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
         )}
       </div>
 
+      {/* Orbital Data Section */}
+      {displayScenario.orbitalData && (
+        <div className="space-y-4 mb-6">
+          <h3 className="text-lg font-semibold text-purple-400">Orbital Mechanics Data</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Orbit Class:</span>
+              <span className="text-purple-400 font-semibold">{displayScenario.orbitalData.orbit_class?.orbit_class_type}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Orbit Description:</span>
+              <span className="text-purple-300 text-xs">{displayScenario.orbitalData.orbit_class?.orbit_class_description}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Eccentricity:</span>
+              <span className="text-blue-400">{parseFloat(displayScenario.orbitalData.eccentricity).toFixed(4)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Semi-Major Axis:</span>
+              <span className="text-blue-400">{parseFloat(displayScenario.orbitalData.semi_major_axis).toFixed(4)} AU</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Inclination:</span>
+              <span className="text-blue-400">{parseFloat(displayScenario.orbitalData.inclination).toFixed(2)}°</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Orbital Period:</span>
+              <span className="text-blue-400">{parseFloat(displayScenario.orbitalData.orbital_period).toFixed(1)} days</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Perihelion Distance:</span>
+              <span className="text-green-400">{parseFloat(displayScenario.orbitalData.perihelion_distance).toFixed(4)} AU</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Aphelion Distance:</span>
+              <span className="text-red-400">{parseFloat(displayScenario.orbitalData.aphelion_distance).toFixed(4)} AU</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Orbit Uncertainty:</span>
+              <span className={displayScenario.orbitalData.orbit_uncertainty === '0' ? 'text-green-400' : 'text-yellow-400'}>
+                {displayScenario.orbitalData.orbit_uncertainty === '0' ? 'Well-determined' : `Uncertainty: ${displayScenario.orbitalData.orbit_uncertainty}`}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Observations Used:</span>
+              <span className="text-gray-300">{displayScenario.orbitalData.observations_used}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Data Arc:</span>
+              <span className="text-gray-300">{displayScenario.orbitalData.data_arc_in_days} days</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Simulated Impact Data */}
       <div className="space-y-4 mb-6">
         <h3 className="text-lg font-semibold text-orange-400">Simulated Impact Data</h3>

@@ -1,4 +1,4 @@
-import { nasaApiService, NASAObject } from './nasaApi';
+import { nasaApiService, NASAObject, OrbitalData } from './nasaApi';
 import { trajectoryCalculator } from './trajectoryCalculator';
 import { ImpactScenario } from '../types/asteroid';
 
@@ -25,32 +25,76 @@ class NASADataManager {
     }
 
     try {
-      console.log('Fetching fresh NASA data...');
+      console.log('Fetching fresh NASA data directly from backend...');
       
-      // Test NASA API first
+      // Test backend health first
+      console.log('🏥 Testing backend health...');
+      const backendHealthy = await nasaApiService.testBackendHealth();
+      if (!backendHealthy) {
+        console.log('⚠️ Backend health check failed, trying NASA API test...');
+      }
+      
+      // Test NASA API
       const apiWorking = await nasaApiService.testNASAAPI();
       if (!apiWorking) {
-        console.log('NASA API test failed, using fallback data');
+        console.log('❌ NASA API test failed, using fallback data');
         return this.getFallbackData();
       }
       
-      // Fetch real NASA data
+      // Fetch comprehensive NASA data (both standard and orbital)
       let nasaResponse;
+      let orbitalData;
+      
       if (customDateRange) {
+        console.log('📅 Using custom date range:', customDateRange);
         this.currentDateRange = customDateRange;
-        nasaResponse = await nasaApiService.getAsteroidsForDateRange(customDateRange.startDate, customDateRange.endDate);
+        const comprehensiveData = await nasaApiService.getComprehensiveAsteroidData(customDateRange.startDate, customDateRange.endDate);
+        nasaResponse = comprehensiveData.standardData;
+        orbitalData = comprehensiveData.orbitalData;
       } else {
-        nasaResponse = await nasaApiService.getCurrentWeekAsteroids();
+        console.log('📅 Using current week data');
+        const comprehensiveData = await nasaApiService.getComprehensiveAsteroidData(
+          new Date().toISOString().split('T')[0],
+          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        );
+        nasaResponse = comprehensiveData.standardData;
+        orbitalData = comprehensiveData.orbitalData;
       }
-      console.log('NASA response received:', nasaResponse);
+      
+      console.log('📊 NASA Data Manager received response:');
+      console.log('  - Element count:', nasaResponse.element_count);
+      console.log('  - Response keys:', Object.keys(nasaResponse));
+      console.log('  - Near earth objects dates:', Object.keys(nasaResponse.near_earth_objects || {}));
+      console.log('🪨 Orbital data received:');
+      console.log('  - Orbital data asteroids:', Object.keys(orbitalData).length);
+      console.log('  - Asteroid names with orbital data:', Object.keys(orbitalData));
+      console.log('📋 Full NASA response:', JSON.stringify(nasaResponse, null, 2));
+      console.log('🔍 Sample orbital data:', orbitalData && Object.keys(orbitalData).length > 0 ? 
+        JSON.stringify(orbitalData[Object.keys(orbitalData)[0]], null, 2) : 'No orbital data');
       
       // Extract all asteroids from all dates
       const allAsteroids: NASAObject[] = [];
       Object.values(nasaResponse.near_earth_objects).forEach(asteroids => {
         allAsteroids.push(...asteroids);
       });
+      
+      console.log('🪨 Extracted asteroids from NASA response:');
+      console.log('  - Total asteroids found:', allAsteroids.length);
+      console.log('  - Sample asteroid:', allAsteroids.length > 0 ? {
+        id: allAsteroids[0].id,
+        name: allAsteroids[0].name,
+        hazardous: allAsteroids[0].is_potentially_hazardous_asteroid,
+        diameter: allAsteroids[0].estimated_diameter?.meters
+      } : 'No asteroids');
 
       // Filter for interesting asteroids with better criteria
+      console.log('🔍 Filtering asteroids with criteria:');
+      console.log('  - Potentially hazardous asteroids');
+      console.log('  - Close approaches (within 20 Earth radii)');
+      console.log('  - Large asteroids (over 100m diameter)');
+      console.log('  - Fast asteroids (over 15 km/s)');
+      console.log('  - Any asteroid with significant size and reasonable approach');
+      
       const interestingAsteroids = allAsteroids.filter(asteroid => {
         const approachData = asteroid.close_approach_data[0];
         const missDistance = parseFloat(approachData.miss_distance.kilometers);
@@ -71,6 +115,17 @@ class NASADataManager {
                velocity > 15 ||
                (diameter > 50 && missDistance < earthRadius * 50);
       });
+      
+      console.log('✅ Filtering results:');
+      console.log('  - Interesting asteroids found:', interestingAsteroids.length);
+      console.log('  - Filtered out:', allAsteroids.length - interestingAsteroids.length);
+      console.log('  - Sample filtered asteroid:', interestingAsteroids.length > 0 ? {
+        id: interestingAsteroids[0].id,
+        name: interestingAsteroids[0].name,
+        hazardous: interestingAsteroids[0].is_potentially_hazardous_asteroid,
+        diameter: interestingAsteroids[0].estimated_diameter?.meters,
+        missDistance: parseFloat(interestingAsteroids[0].close_approach_data[0].miss_distance.kilometers)
+      } : 'No asteroids');
 
       // Create impact scenarios for major cities
       const majorCities = [
@@ -98,6 +153,10 @@ class NASADataManager {
 
       const impactScenarios: ImpactScenario[] = [];
       
+      console.log('🏙️ Creating impact scenarios for cities:');
+      console.log('  - Number of cities:', majorCities.length);
+      console.log('  - Cities:', majorCities.map(city => city.name).join(', '));
+      
       // Create scenarios for the most interesting asteroids
       const topAsteroids = interestingAsteroids
         .sort((a, b) => {
@@ -107,19 +166,52 @@ class NASADataManager {
         })
         .slice(0, 30); // Top 30 most interesting asteroids
 
+      console.log('🪨 Processing top asteroids:');
+      console.log('  - Top asteroids selected:', topAsteroids.length);
+      console.log('  - Sample top asteroid:', topAsteroids.length > 0 ? {
+        id: topAsteroids[0].id,
+        name: topAsteroids[0].name,
+        hazardous: topAsteroids[0].is_potentially_hazardous_asteroid,
+        missDistance: parseFloat(topAsteroids[0].close_approach_data[0].miss_distance.kilometers)
+      } : 'No asteroids');
+
       topAsteroids.forEach((asteroid, index) => {
         const city = majorCities[index % majorCities.length];
+        
+        // Find matching orbital data for this asteroid
+        const asteroidOrbitalData = orbitalData[asteroid.name] || null;
+        
         const scenario = trajectoryCalculator.convertToImpactScenario(asteroid, city);
+        
+        // Add orbital data to the scenario if available
+        if (asteroidOrbitalData) {
+          scenario.orbitalData = asteroidOrbitalData;
+        }
+        
         console.log(`Creating scenario ${index}:`, {
           asteroidId: asteroid.id,
           asteroidName: asteroid.name,
           scenarioId: scenario.id,
           scenarioName: scenario.name,
           nasaId: scenario.nasaData?.id,
-          nasaName: scenario.nasaData?.name
+          nasaName: scenario.nasaData?.name,
+          hasOrbitalData: !!asteroidOrbitalData,
+          orbitClass: asteroidOrbitalData?.orbit_class?.orbit_class_type || 'Unknown',
+          eccentricity: asteroidOrbitalData?.eccentricity || 'Unknown',
+          orbitalPeriod: asteroidOrbitalData?.orbital_period || 'Unknown'
         });
         impactScenarios.push(scenario);
       });
+      
+      console.log('✅ Scenario creation completed:');
+      console.log('  - Total scenarios created:', impactScenarios.length);
+      console.log('  - Sample scenario:', impactScenarios.length > 0 ? {
+        id: impactScenarios[0].id,
+        name: impactScenarios[0].name,
+        city: impactScenarios[0].city,
+        energy: impactScenarios[0].energy,
+        nasaData: impactScenarios[0].nasaData?.name
+      } : 'No scenarios');
 
       // Cache the data
       this.cache = {
@@ -127,6 +219,12 @@ class NASADataManager {
         impactScenarios,
         lastUpdated: new Date()
       };
+      
+      console.log('💾 Data cached successfully:');
+      console.log('  - Cache timestamp:', this.cache.lastUpdated);
+      console.log('  - NASA objects cached:', this.cache.nasaObjects.length);
+      console.log('  - Impact scenarios cached:', this.cache.impactScenarios.length);
+      console.log('🎉 NASA Data Manager completed successfully!');
 
       return this.cache;
     } catch (error) {

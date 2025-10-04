@@ -570,11 +570,11 @@ When clicking on Earth after selecting an asteroid:
 
 ### **Data Sources and Validation**
 
-#### **NASA NEO API Data**
-- **Real-time Data**: Current and historical asteroid information
-- **Scientific Accuracy**: Official NASA orbital mechanics data
-- **Regular Updates**: Data refreshed every 24 hours
-- **Comprehensive Coverage**: All near-Earth objects tracked by NASA
+#### **Local NASA NEO API Data**
+- **Real-time Data**: Current and historical asteroid information via local backend
+- **Scientific Accuracy**: Official NASA orbital mechanics data processed by local API
+- **Regular Updates**: Data refreshed every 24 hours through local backend
+- **Comprehensive Coverage**: All near-Earth objects tracked by NASA via localhost:8000
 
 #### **Population Data Sources**
 - **Major Cities**: 30+ cities with accurate population densities
@@ -592,8 +592,9 @@ This comprehensive system provides realistic, location-specific casualty estimat
 
 ## Data Sources
 
-- **NASA NEO API**: [https://api.nasa.gov/](https://api.nasa.gov/)
-- **Real-time Data**: Current and historical asteroid information
+- **Local NASA NEO API**: http://localhost:8000 (Your backend API that calls NASA's API)
+- **NASA NEO API**: [https://api.nasa.gov/](https://api.nasa.gov/) (Called indirectly via your backend)
+- **Real-time Data**: Current and historical asteroid information processed by local backend
 - **Scientific Models**: Impact consequence calculations
 - **Orbital Mechanics**: Trajectory and collision probability
 - **Population Data**: City-specific impact scenarios
