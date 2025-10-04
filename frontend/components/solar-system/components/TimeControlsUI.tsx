@@ -1,17 +1,19 @@
-import { TimeState } from '../types';
+import { TimeState } from '../utils';
 
 interface TimeControlsUIProps {
   timeState: TimeState;
   onTimeControlChange: (timeScale: number, playing: boolean) => void;
   onDateChange: (direction: 'forward' | 'backward', amount: 'hour' | 'day' | 'week' | 'month') => void;
   onResetCamera: () => void;
+  onResetToCurrentDate?: () => void;
 }
 
 export default function TimeControlsUI({ 
   timeState, 
   onTimeControlChange, 
   onDateChange,
-  onResetCamera 
+  onResetCamera,
+  onResetToCurrentDate
 }: TimeControlsUIProps) {
   return (
     <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 text-white">
@@ -53,6 +55,16 @@ export default function TimeControlsUI({
             1w
           </button>
         </div>
+        
+        {/* Reset to Current Date Button */}
+        {onResetToCurrentDate && (
+          <button
+            onClick={onResetToCurrentDate}
+            className="w-full px-3 py-2 bg-orange-600 hover:bg-orange-700 rounded text-sm font-medium"
+          >
+            📅 Reset to Current Date
+          </button>
+        )}
         
         {/* Manual Date Controls */}
         <div className="space-y-2">

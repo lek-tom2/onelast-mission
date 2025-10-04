@@ -2,15 +2,17 @@
 import { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import SolarSystemContent from './components/SolarSystemContent';
-import TimeControlsUI from './components/TimeControlsUI';
-import ObjectListUI from './components/ObjectListUI';
-import InfoPanelUI from './components/InfoPanelUI';
+import FancyTimeControls from './components/FancyTimeControls';
+import FancySidebar from './components/FancySidebar';
 import { PLANETARY_ELEMENTS } from './constants/planetaryElements';
-import { TimeState } from './types';
+import { TimeState, NEOObject } from './utils';
 import { getCurrentJulianDate } from './utils/timeUtils';
+import { useNEOData } from '@/lib/hooks/useNEOData';
 import * as THREE from 'three';
 
 export default function SolarSystemScene() {
+  const { neoObjects, loading, error, lastUpdated, refetch } = useNEOData();
+  
   const [timeState, setTimeState] = useState<TimeState>({
     currentDate: new Date(),
     julianDate: getCurrentJulianDate(),
@@ -18,6 +20,7 @@ export default function SolarSystemScene() {
     isPlaying: false
   });
   const [targetPlanetKey, setTargetPlanetKey] = useState<keyof typeof PLANETARY_ELEMENTS | 'sun' | undefined>();
+  const [targetNEO, setTargetNEO] = useState<NEOObject | undefined>();
 
   const handleTimeControlChange = (timeScale: number, playing: boolean) => {
     setTimeState(prev => ({
@@ -25,30 +28,6 @@ export default function SolarSystemScene() {
       timeScale,
       isPlaying: playing
     }));
-  };
-
-  const handleDateChange = (direction: 'forward' | 'backward', amount: 'hour' | 'day' | 'week' | 'month') => {
-    setTimeState(prev => {
-      let hoursToAdd = 0;
-      
-      switch (amount) {
-        case 'hour': hoursToAdd = 1; break;
-        case 'day': hoursToAdd = 24; break;
-        case 'week': hoursToAdd = 24 * 7; break;
-        case 'month': hoursToAdd = 24 * 30; break;
-      }
-      
-      if (direction === 'backward') hoursToAdd = -hoursToAdd;
-      
-      const newJulianDate = prev.julianDate + (hoursToAdd / 24);
-      const newDate = new Date((newJulianDate - 2440587.5) * 86400000);
-      
-      return {
-        ...prev,
-        julianDate: newJulianDate,
-        currentDate: newDate
-      };
-    });
   };
 
   const handleObjectDoubleClick = (position: THREE.Vector3) => {
@@ -66,6 +45,24 @@ export default function SolarSystemScene() {
 
   const handleResetCamera = () => {
     setTargetPlanetKey('sun');
+    setTargetNEO(undefined);
+  };
+
+  const handleNEOClick = (neo: NEOObject) => {
+    setTargetNEO(neo);
+    setTargetPlanetKey(undefined);
+  };
+
+  const handleResetToCurrentDate = () => {
+    const now = new Date();
+    const currentJulianDate = getCurrentJulianDate();
+    
+    setTimeState({
+      currentDate: now,
+      julianDate: currentJulianDate,
+      timeScale: 1,
+      isPlaying: false
+    });
   };
 
   return (
@@ -81,30 +78,32 @@ export default function SolarSystemScene() {
             onObjectDoubleClick={handleObjectDoubleClick}
             setTimeState={setTimeState}
             targetPlanetKey={targetPlanetKey}
+            targetNEO={targetNEO}
             onResetCamera={handleResetCamera}
             onPlanetTarget={handlePlanetTarget}
+            neoObjects={neoObjects}
           />
         </Suspense>
       </Canvas>
       
-      {/* Time Controls */}
-      <TimeControlsUI
+      {/* Fancy Time Controls at bottom center */}
+      <FancyTimeControls
         timeState={timeState}
         onTimeControlChange={handleTimeControlChange}
-        onDateChange={handleDateChange}
-        onResetCamera={handleResetCamera}
+        onResetToCurrentDate={handleResetToCurrentDate}
       />
       
-      {/* Object List */}
-      <ObjectListUI
+      {/* Fancy Sidebar on the left */}
+      <FancySidebar
         timeState={timeState}
         targetPlanetKey={targetPlanetKey}
         onPlanetClick={handlePlanetClick}
         onResetCamera={handleResetCamera}
+        neoObjects={neoObjects}
+        neoLoading={loading}
+        neoError={error}
+        onNEOClick={handleNEOClick}
       />
-      
-      {/* Info Panels */}
-      <InfoPanelUI />
     </div>
   );
 }

@@ -12,6 +12,9 @@ export interface NEOObject {
     L: [number, number];      // mean longitude
     w_bar: [number, number];  // longitude of perihelion
     Omega: [number, number];  // longitude of ascending node
+    // Additional fields for asteroids
+    epoch?: number;           // epoch JD
+    meanMotion?: number;      // degrees per day
   };
   hazardous: boolean;
   closestApproach?: {

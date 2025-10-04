@@ -7,7 +7,7 @@ import NEOComponent from './NEOComponent';
 import OrbitPath from './OrbitPath';
 import SolarSystemCameraController from './SolarSystemCameraController';
 import { PLANETARY_ELEMENTS } from '../constants/planetaryElements';
-import { NEO_OBJECTS, TimeState } from '../types';
+import { TimeState, NEOObject } from '../utils';
 import * as THREE from 'three';
 
 interface SolarSystemContentProps {
@@ -16,8 +16,10 @@ interface SolarSystemContentProps {
   onObjectDoubleClick: (position: THREE.Vector3) => void;
   setTimeState: React.Dispatch<React.SetStateAction<TimeState>>;
   targetPlanetKey?: keyof typeof PLANETARY_ELEMENTS | 'sun';
+  targetNEO?: NEOObject;
   onResetCamera: () => void;
   onPlanetTarget: (planetKey?: keyof typeof PLANETARY_ELEMENTS | 'sun') => void;
+  neoObjects: NEOObject[];
 }
 
 export default function SolarSystemContent({ 
@@ -25,9 +27,11 @@ export default function SolarSystemContent({
   onTimeControlChange, 
   onObjectDoubleClick, 
   setTimeState, 
-  targetPlanetKey, 
+  targetPlanetKey,
+  targetNEO,
   onResetCamera, 
-  onPlanetTarget 
+  onPlanetTarget,
+  neoObjects
 }: SolarSystemContentProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
@@ -91,7 +95,7 @@ export default function SolarSystemContent({
       ))}
       
       {/* NEO orbital paths */}
-      {NEO_OBJECTS.map((neo) => (
+      {neoObjects.map((neo) => (
         <OrbitPath 
           key={`${neo.id}-orbit`}
           elements={neo.orbitalElements}
@@ -110,7 +114,7 @@ export default function SolarSystemContent({
       ))}
       
       {/* NEO Objects */}
-      {NEO_OBJECTS.map((neo) => (
+      {neoObjects.map((neo) => (
         <NEOComponent
           key={neo.id}
           neo={neo}
@@ -121,7 +125,8 @@ export default function SolarSystemContent({
       
       {/* Camera controls */}
       <SolarSystemCameraController 
-        targetPlanetKey={targetPlanetKey} 
+        targetPlanetKey={targetPlanetKey}
+        targetNEO={targetNEO}
         julianDate={timeState.julianDate}
         controlsRef={controlsRef}
       />

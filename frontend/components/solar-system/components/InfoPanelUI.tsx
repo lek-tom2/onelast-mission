@@ -1,6 +1,11 @@
-import { NEO_OBJECTS } from '../types';
+import { NEOObject } from '../types';
 
-export default function InfoPanelUI() {
+interface InfoPanelUIProps {
+  neoObjects: NEOObject[];
+  neoLoading?: boolean;
+}
+
+export default function InfoPanelUI({ neoObjects, neoLoading }: InfoPanelUIProps) {
   return (
     <>
       {/* Instructions */}
@@ -31,7 +36,7 @@ export default function InfoPanelUI() {
           </div>
           <div className="flex justify-between">
             <span>NEOs Tracked:</span>
-            <span>{NEO_OBJECTS.length}</span>
+            <span>{neoLoading ? '...' : neoObjects.length}</span>
           </div>
         </div>
       </div>

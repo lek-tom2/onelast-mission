@@ -12,12 +12,18 @@ interface PlanetaryElements {
   w_bar: number[];
   Omega: number[];
   hasRings?: boolean;
+  epoch?: number;
+  meanMotion?: number;
 }
 
 // Keplerian orbital mechanics functions
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function calculateKeplerianPosition(elements: any, julianDate: number) {
-  // Calculate centuries past J2000.0
+export function calculateKeplerianPosition(elements: PlanetaryElements, julianDate: number) {
+  // Check if this is an asteroid with epoch and mean motion data
+  if (elements.epoch && elements.meanMotion) {
+    return calculateAsteroidPosition(elements, julianDate);
+  }
+  
+  // Calculate centuries past J2000.0 for planets
   const T = (julianDate - 2451545.0) / 36525.0;
   
   // Compute orbital elements for current time
@@ -49,9 +55,55 @@ export function calculateKeplerianPosition(elements: any, julianDate: number) {
   return {
     x: position.x,
     y: position.z, // Use Z as Y for 3D visualization
-    z: position.y, // Use Y as Z for 3D visualization
+    z: -position.y, // Negative to make counterclockwise motion (correct orbital direction)
     distance: Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z)
   };
+}
+
+// New function for asteroid orbital calculations
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function calculateAsteroidPosition(elements: any, julianDate: number) {
+  // Calculate time since epoch in days
+  const timeSinceEpoch = julianDate - elements.epoch;
+  
+  // Get orbital elements
+  const a = elements.a[0];           // semi-major axis (AU)
+  const e = elements.e[0];           // eccentricity
+  const I = elements.I[0];           // inclination (degrees)
+  const Omega = elements.Omega[0];   // longitude of ascending node (degrees)
+  const w_bar = elements.w_bar[0];   // longitude of perihelion (degrees)
+  const L_epoch = elements.L[0];     // mean longitude at epoch (degrees)
+  const meanMotion = elements.meanMotion; // degrees per day
+  
+  // Calculate current mean longitude using mean motion
+  const L_current = L_epoch + (meanMotion * timeSinceEpoch);
+  
+  // Compute argument of perihelion and mean anomaly
+  const omega = w_bar - Omega;        // argument of perihelion
+  const M_current = L_current - w_bar; // current mean anomaly
+  
+  // Normalize mean anomaly to [-180, 180] degrees
+  const M_norm = ((M_current % 360) + 540) % 360 - 180;
+  
+  // Solve Kepler's equation for eccentric anomaly E
+  const E = solveKeplersEquation(M_norm, e);
+  
+  // Compute position in orbital plane
+  const x_prime = a * (Math.cos(E * Math.PI / 180) - e);
+  const y_prime = a * Math.sqrt(1 - e * e) * Math.sin(E * Math.PI / 180);
+  const z_prime = 0;
+  
+  // Convert to 3D coordinates in J2000 ecliptic frame
+  const position = transformToEcliptic(x_prime, y_prime, z_prime, omega, I, Omega);
+  
+  const result = {
+    x: position.x,
+    y: position.z, // Use Z as Y for 3D visualization
+    z: -position.y, // Negative to make counterclockwise motion (correct orbital direction)
+    distance: Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z)
+  };
+  
+  return result;
 }
 
 function solveKeplersEquation(M_deg: number, e: number): number {
@@ -123,11 +175,11 @@ export function generateOrbitPoints(elements: any, numPoints: number = 100) {
     // Transform to ecliptic coordinates
     const position = transformToEcliptic(x_prime, y_prime, z_prime, omega, I, Omega);
     
-    // Scale for visualization (1 AU = 4 units)
+    // Scale for visualization (1 AU = 4 units) with correct orbital direction
     points.push(new THREE.Vector3(
       position.x * 4,
       position.z * 4, // Use Z as Y for 3D visualization
-      position.y * 4  // Use Y as Z for 3D visualization
+      -position.y * 4  // Negative to make counterclockwise motion (correct orbital direction)
     ));
   }
   

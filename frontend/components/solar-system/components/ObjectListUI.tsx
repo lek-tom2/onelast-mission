@@ -1,19 +1,24 @@
 import { PLANETARY_ELEMENTS } from '../constants/planetaryElements';
-import { NEO_OBJECTS } from '../types';
-import { TimeState } from '../types';
+import { TimeState, NEOObject } from '../types';
 
 interface ObjectListUIProps {
   timeState: TimeState;
   targetPlanetKey?: keyof typeof PLANETARY_ELEMENTS | 'sun';
   onPlanetClick: (planetKey: keyof typeof PLANETARY_ELEMENTS) => void;
   onResetCamera: () => void;
+  neoObjects: NEOObject[];
+  neoLoading?: boolean;
+  neoError?: string | null;
 }
 
 export default function ObjectListUI({ 
   timeState, 
   targetPlanetKey, 
   onPlanetClick, 
-  onResetCamera 
+  onResetCamera,
+  neoObjects,
+  neoLoading,
+  neoError
 }: ObjectListUIProps) {
   return (
     <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 text-white">
@@ -55,11 +60,17 @@ export default function ObjectListUI({
         </div>
       </div>
       
-      {NEO_OBJECTS.length > 0 && (
+      {(neoObjects.length > 0 || neoLoading || neoError) && (
         <div>
           <h4 className="text-sm font-semibold mb-1">Near-Earth Objects</h4>
+          {neoLoading && (
+            <div className="text-xs text-blue-300">Loading NEO data...</div>
+          )}
+          {neoError && (
+            <div className="text-xs text-red-400">Error: {neoError}</div>
+          )}
           <div className="space-y-1 text-sm">
-            {NEO_OBJECTS.map((neo) => (
+            {neoObjects.map((neo) => (
               <div key={neo.id} className="flex items-center space-x-2">
                 <div 
                   className="w-3 h-3" 

@@ -46,8 +46,8 @@ export const PLANETARY_ELEMENTS = {
     w_bar: [-23.94362959, 0.44441088],
     Omega: [49.55953891, -0.29257343]
   },
-  jewpiter: {
-    name: 'zydpiotr',
+  jupiter: {
+    name: 'Jupiter',
     color: '#D8CA9D',
     size: 0.15,
     a: [5.20288700, -0.00011607],
