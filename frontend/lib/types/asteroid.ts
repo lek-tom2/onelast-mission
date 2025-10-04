@@ -46,7 +46,29 @@ export interface ImpactScenario {
   craterSize: number; // km
   trajectory?: AsteroidTrajectory;
   consequences?: ImpactConsequences;
-  nasaData?: any; // NASA API data
+  nasaData?: {
+    id: string;
+    name: string;
+    is_potentially_hazardous_asteroid: boolean;
+    absolute_magnitude_h: number;
+    estimated_diameter: {
+      meters: {
+        estimated_diameter_min: number;
+        estimated_diameter_max: number;
+      };
+    };
+    close_approach_data: Array<{
+      close_approach_date: string;
+      close_approach_date_full: string;
+      miss_distance: {
+        kilometers: string;
+      };
+      relative_velocity: {
+        kilometers_per_second: string;
+      };
+      orbiting_body: string;
+    }>;
+  }; // NASA API data
   orbitalData?: OrbitalData; // Orbital mechanics data
   collisionProbability?: number; // 0-1
 }

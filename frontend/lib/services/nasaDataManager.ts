@@ -1,4 +1,4 @@
-import { nasaApiService, NASAObject, OrbitalData } from './nasaApi';
+import { nasaApiService, NASAObject } from './nasaApi';
 import { trajectoryCalculator } from './trajectoryCalculator';
 import { ImpactScenario } from '../types/asteroid';
 
@@ -30,24 +30,21 @@ class NASADataManager {
       // Using local JSON files - no health checks needed
       console.log('📁 Using local JSON files - skipping health checks');
 
-      // Fetch comprehensive NASA data (both standard and orbital)
+      // Fetch NASA data and orbital data separately
       let nasaResponse;
       let orbitalData;
 
       if (customDateRange) {
         console.log('📅 Using custom date range:', customDateRange);
         this.currentDateRange = customDateRange;
-        const comprehensiveData = await nasaApiService.getComprehensiveAsteroidData(customDateRange.startDate, customDateRange.endDate);
-        nasaResponse = comprehensiveData.standardData;
-        orbitalData = comprehensiveData.orbitalData;
+        nasaResponse = await nasaApiService.getNearEarthObjects(customDateRange.startDate, customDateRange.endDate);
+        orbitalData = await nasaApiService.getAsteroidsPerObject(customDateRange.startDate, customDateRange.endDate);
       } else {
         console.log('📅 Using current week data');
-        const comprehensiveData = await nasaApiService.getComprehensiveAsteroidData(
-          new Date().toISOString().split('T')[0],
-          new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        );
-        nasaResponse = comprehensiveData.standardData;
-        orbitalData = comprehensiveData.orbitalData;
+        const startDate = new Date().toISOString().split('T')[0];
+        const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        nasaResponse = await nasaApiService.getNearEarthObjects(startDate, endDate);
+        orbitalData = await nasaApiService.getAsteroidsPerObject(startDate, endDate);
       }
 
       console.log('📊 NASA Data Manager received response:');
@@ -146,12 +143,8 @@ class NASADataManager {
       console.log('  - Number of cities:', majorCities.length);
       console.log('  - Cities:', majorCities.map(city => city.name).join(', '));
 
-      // Only show the single asteroid from one-asteroid.json
-      // Filter to find the asteroid that matches the one in one-asteroid.json
-      const targetAsteroidId = '3427459'; // ID from one-asteroid.json
-      const targetAsteroid = interestingAsteroids.find(asteroid => asteroid.id === targetAsteroidId);
-
-      const topAsteroids = targetAsteroid ? [targetAsteroid] : [];
+      // Show all interesting asteroids (up to 20 for performance)
+      const topAsteroids = interestingAsteroids.slice(0, 20);
 
       console.log('🪨 Processing top asteroids:');
       console.log('  - Top asteroids selected:', topAsteroids.length);
@@ -248,7 +241,7 @@ class NASADataManager {
     };
   }
 
-  async getAsteroidDetails(asteroidId: string): Promise<any> {
+  async getAsteroidDetails(asteroidId: string): Promise<NASAObject | null> {
     try {
       return await nasaApiService.getAsteroidDetails(asteroidId);
     } catch (error) {
