@@ -20,58 +20,78 @@ function ImpactExplosion({ asteroid, impactPoint }: { asteroid: ImpactScenario; 
   const groupRef = useRef<THREE.Group>(null);
   const startTime = useRef(Date.now());
 
+  // Calculate explosion scale based on asteroid energy
+  const energyScale = useMemo(() => {
+    // Energy is in megatons, scale from 0.07 to 1.67 (3x smaller)
+    const minEnergy = 0.1; // 0.1 megatons
+    const maxEnergy = 1000; // 1000 megatons
+    const energy = Math.max(minEnergy, Math.min(maxEnergy, asteroid.energy));
+
+    // Logarithmic scaling for better visual distribution
+    const logScale = Math.log10(energy / minEnergy) / Math.log10(maxEnergy / minEnergy);
+    return Math.max(0.07, Math.min(1.67, 0.17 + logScale * 1.5));
+  }, [asteroid.energy]);
+
+  // Calculate explosion duration based on energy (larger explosions last longer)
+  const explosionDuration = useMemo(() => {
+    return Math.max(1.5, Math.min(4.0, 2.0 + energyScale * 0.5));
+  }, [energyScale]);
+
   useFrame((state) => {
     if (!groupRef.current || !impactPoint) return;
 
     const elapsed = (Date.now() - startTime.current) / 1000;
-    const progress = Math.min(elapsed / 2, 1); // 2 second explosion
+    const progress = Math.min(elapsed / explosionDuration, 1);
 
     // Position at impact point
     groupRef.current.position.copy(impactPoint);
 
-    // Scale up the explosion from 0 to 3x
-    const scale = progress * 3;
+    // Scale up the explosion based on energy
+    const scale = progress * energyScale;
     groupRef.current.scale.setScalar(scale);
 
     // Fade out over time
     groupRef.current.children.forEach((child) => {
       if (child instanceof THREE.Mesh) {
         const material = child.material as THREE.MeshBasicMaterial;
-        material.opacity = Math.max(0, 1 - progress * 1.5);
+        material.opacity = Math.max(0, 1 - progress * 1.2);
       }
     });
   });
 
   if (!impactPoint) return null;
 
+  // Calculate particle count based on energy
+  const particleCount = Math.max(3, Math.min(17, Math.floor(7 * energyScale)));
+
   return (
     <group ref={groupRef}>
       {/* Inner explosion core */}
       <mesh>
-        <sphereGeometry args={[0.2, 16, 16]} />
+        <sphereGeometry args={[0.2 * energyScale, 16, 16]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
       </mesh>
 
       {/* Main explosion */}
       <mesh>
-        <sphereGeometry args={[0.4, 16, 16]} />
+        <sphereGeometry args={[0.4 * energyScale, 16, 16]} />
         <meshBasicMaterial color="#ff0000" transparent opacity={0.8} />
       </mesh>
 
       {/* Outer shockwave */}
       <mesh>
-        <sphereGeometry args={[0.6, 16, 16]} />
+        <sphereGeometry args={[0.6 * energyScale, 16, 16]} />
         <meshBasicMaterial color="#ffaa00" transparent opacity={0.6} wireframe />
       </mesh>
 
-      {/* Debris particles */}
-      {Array.from({ length: 20 }, (_, i) => (
+      {/* Debris particles - more particles for larger explosions */}
+      {Array.from({ length: particleCount }, (_, i) => (
         <mesh key={i} position={[
-          (Math.random() - 0.5) * 2,
-          (Math.random() - 0.5) * 2,
-          (Math.random() - 0.5) * 2
+          (Math.random() - 0.5) * 2 * energyScale,
+          (Math.random() - 0.5) * 2 * energyScale,
+          (Math.random() - 0.5) * 2 * energyScale
         ]}>
-          <sphereGeometry args={[0.02, 4, 4]} />
+          <sphereGeometry args={[0.02 * energyScale, 4, 4]} />
           <meshBasicMaterial color="#ff6600" transparent opacity={0.7} />
         </mesh>
       ))}
@@ -86,6 +106,23 @@ function AsteroidTrajectory({ asteroid, impactPoint }: { asteroid: ImpactScenari
   const startTime = useRef(Date.now());
   const { camera } = useThree();
 
+  // Calculate asteroid size based on energy
+  const asteroidSize = useMemo(() => {
+    // Energy is in megatons, scale asteroid size from 0.017 to 0.1 (3x smaller)
+    const minEnergy = 0.1; // 0.1 megatons
+    const maxEnergy = 1000; // 1000 megatons
+    const energy = Math.max(minEnergy, Math.min(maxEnergy, asteroid.energy));
+
+    // Logarithmic scaling for better visual distribution
+    const logScale = Math.log10(energy / minEnergy) / Math.log10(maxEnergy / minEnergy);
+    return Math.max(0.017, Math.min(0.1, 0.027 + logScale * 0.073));
+  }, [asteroid.energy]);
+
+  // Calculate trail length based on energy (larger asteroids have longer trails)
+  const trailLength = useMemo(() => {
+    return Math.max(10, Math.min(27, Math.floor(17 * (0.5 + asteroidSize * 2))));
+  }, [asteroidSize]);
+
   const { startPos, endPos } = useMemo(() => {
     const startPos = camera.position.clone(); // Start from camera position
     const endPos = impactPoint ? impactPoint.clone().multiplyScalar(1.1) : new THREE.Vector3(0, 0, 1);
@@ -94,26 +131,33 @@ function AsteroidTrajectory({ asteroid, impactPoint }: { asteroid: ImpactScenari
 
   const trailGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(50 * 3); // Fewer points for shorter trail
+    const positions = new Float32Array(trailLength * 3);
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     return geometry;
-  }, []);
+  }, [trailLength]);
+
+  // Calculate trajectory duration based on energy (larger asteroids move slower)
+  const trajectoryDuration = useMemo(() => {
+    return Math.max(0.8, Math.min(2.0, 1.0 + asteroidSize * 2));
+  }, [asteroidSize]);
 
   useFrame(() => {
     if (!meshRef.current || !trailRef.current) return;
 
     const elapsed = (Date.now() - startTime.current) / 1000;
-    const progress = Math.min(elapsed / 1, 1); // 1 second trajectory
+    const progress = Math.min(elapsed / trajectoryDuration, 1);
 
     const currentPos = startPos.clone().lerp(endPos, progress);
     meshRef.current.position.copy(currentPos);
 
-    meshRef.current.rotation.x += 0.2;
-    meshRef.current.rotation.y += 0.2;
+    // Rotation speed based on size (smaller asteroids spin faster)
+    const rotationSpeed = 0.2 / asteroidSize;
+    meshRef.current.rotation.x += rotationSpeed;
+    meshRef.current.rotation.y += rotationSpeed;
 
     const positions = trailRef.current.geometry.attributes.position.array as Float32Array;
-    for (let i = 0; i < 50; i++) {
-      const trailProgress = Math.max(0, progress - i * 0.02);
+    for (let i = 0; i < trailLength; i++) {
+      const trailProgress = Math.max(0, progress - i * (0.02 / asteroidSize));
       const trailPos = startPos.clone().lerp(endPos, trailProgress);
       positions[i * 3] = trailPos.x;
       positions[i * 3 + 1] = trailPos.y;
@@ -125,11 +169,20 @@ function AsteroidTrajectory({ asteroid, impactPoint }: { asteroid: ImpactScenari
   return (
     <group>
       <mesh ref={meshRef}>
-        <sphereGeometry args={[0.08, 8, 8]} />
-        <meshPhongMaterial color="#ff6600" emissive="#ff3300" emissiveIntensity={0.5} />
+        <sphereGeometry args={[asteroidSize, 8, 8]} />
+        <meshPhongMaterial
+          color="#ff6600"
+          emissive="#ff3300"
+          emissiveIntensity={0.5 + asteroidSize * 0.5} // Brighter for larger asteroids
+        />
       </mesh>
       <points ref={trailRef} geometry={trailGeometry}>
-        <pointsMaterial size={0.03} color="#ffaa00" transparent opacity={0.8} />
+        <pointsMaterial
+          size={0.01 * asteroidSize}
+          color="#ffaa00"
+          transparent
+          opacity={0.8}
+        />
       </points>
     </group>
   );
@@ -211,20 +264,32 @@ function SceneContent({
       return;
     }
 
+    // Calculate trajectory duration based on asteroid energy
+    const minEnergy = 0.1;
+    const maxEnergy = 1000;
+    const energy = Math.max(minEnergy, Math.min(maxEnergy, scenario.energy));
+    const logScale = Math.log10(energy / minEnergy) / Math.log10(maxEnergy / minEnergy);
+    const asteroidSize = Math.max(0.017, Math.min(0.1, 0.027 + logScale * 0.073));
+    const trajectoryDuration = Math.max(0.8, Math.min(2.0, 1.0 + asteroidSize * 2)) * 1000; // Convert to milliseconds
+
+    // Calculate explosion duration based on energy
+    const energyScale = Math.max(0.07, Math.min(1.67, 0.17 + logScale * 1.5));
+    const explosionDuration = Math.max(1.5, Math.min(4.0, 2.0 + energyScale * 0.5)) * 1000; // Convert to milliseconds
+
     // Phase 1: Show asteroid trajectory from camera to impact point
     setLaunchingAsteroid(scenario);
     setShowTrajectory(true);
     setShowExplosion(false);
 
-    // Wait for asteroid to reach impact point (1 second)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Wait for asteroid to reach impact point (dynamic duration)
+    await new Promise(resolve => setTimeout(resolve, trajectoryDuration));
 
     // Phase 2: Hide trajectory and show explosion
     setShowTrajectory(false);
     setShowExplosion(true);
 
-    // Show explosion for 2 seconds
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Show explosion for dynamic duration
+    await new Promise(resolve => setTimeout(resolve, explosionDuration));
 
     // Phase 3: Hide explosion and show impact visualization
     setLaunchingAsteroid(null);
