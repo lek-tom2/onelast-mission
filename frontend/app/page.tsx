@@ -2,7 +2,7 @@
 'use client';
 import { useState } from 'react';
 import SpaceScene from "@/components/SpaceScene";
-import SolarSystemScene from "@/components/SolarSystemScene";
+import SolarSystemScene from "@/components/solar-system/SolarSystemScene";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<'earth' | 'solar-system'>('earth');
