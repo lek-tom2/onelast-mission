@@ -8,11 +8,14 @@ import { populationDensityService } from '@/lib/services/populationDensityServic
 interface AsteroidDetailsPanelProps {
   scenario: ImpactScenario | null;
   onClose: () => void;
+  onLaunch?: (scenario: ImpactScenario) => void;
+  hasImpactPoint?: boolean;
 }
 
-export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDetailsPanelProps) {
+export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasImpactPoint = false }: AsteroidDetailsPanelProps) {
   const [selectedCity, setSelectedCity] = useState<{ lat: number; lng: number; name: string } | null>(null);
   const [calculatedScenario, setCalculatedScenario] = useState<ImpactScenario | null>(null);
+  const [isLaunching, setIsLaunching] = useState(false);
   
   if (!scenario) return null;
 
@@ -48,6 +51,19 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
     return { level: 'MEDIUM', color: '#44ff44' };
   };
 
+  const handleLaunch = async () => {
+    if (!onLaunch) return;
+    
+    setIsLaunching(true);
+    try {
+      // Add a small delay for visual feedback
+      await new Promise(resolve => setTimeout(resolve, 500));
+      onLaunch(displayScenario);
+    } finally {
+      setIsLaunching(false);
+    }
+  };
+
   const getComposition = (energy: number) => {
     if (energy > 1000) return 'Iron-Nickel (Metallic)';
     if (energy > 500) return 'Stony-Iron (Mixed)';
@@ -62,12 +78,30 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-red-400">Asteroid Details</h2>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-white transition-colors text-2xl"
-        >
-          ×
-        </button>
+        <div className="flex items-center gap-3">
+          {onLaunch && (
+            <button
+              onClick={handleLaunch}
+              disabled={isLaunching || !hasImpactPoint}
+              className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                isLaunching
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : !hasImpactPoint
+                  ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                  : 'bg-red-600 hover:bg-red-700 text-white hover:scale-105'
+              }`}
+              title={!hasImpactPoint ? 'Click on Earth to select impact point first' : 'Launch asteroid to selected impact point'}
+            >
+              {isLaunching ? '🚀 Launching...' : !hasImpactPoint ? '🚀 Select Impact Point' : '🚀 Launch Asteroid'}
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors text-2xl"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       {/* City Selection for Impact Calculation */}

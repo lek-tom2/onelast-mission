@@ -11,6 +11,73 @@ import AsteroidDetailsPanel from './AsteroidDetailsPanel';
 import DatePicker from './DatePicker';
 import { nasaDataManager } from '@/lib/services/nasaDataManager';
 import * as THREE from 'three';
+import { useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+
+// Impact Explosion Component
+function ImpactExplosion({ asteroid, impactPoint }: { asteroid: ImpactScenario; impactPoint?: THREE.Vector3 }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const startTime = useRef(Date.now());
+  
+  useFrame((state) => {
+    if (!groupRef.current || !impactPoint) return;
+    
+    const elapsed = (Date.now() - startTime.current) / 1000;
+    const progress = Math.min(elapsed / 2, 1); // 2 second explosion
+    
+    // Position at impact point
+    groupRef.current.position.copy(impactPoint);
+    
+    // Scale up the explosion from 0 to 3x
+    const scale = progress * 3;
+    groupRef.current.scale.setScalar(scale);
+    
+    // Fade out over time
+    groupRef.current.children.forEach((child) => {
+      if (child instanceof THREE.Mesh) {
+        const material = child.material as THREE.MeshBasicMaterial;
+        material.opacity = Math.max(0, 1 - progress * 1.5);
+      }
+    });
+  });
+
+  if (!impactPoint) return null;
+
+  return (
+    <group ref={groupRef}>
+      {/* Inner explosion core */}
+      <mesh>
+        <sphereGeometry args={[0.2, 16, 16]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
+      </mesh>
+      
+      {/* Main explosion */}
+      <mesh>
+        <sphereGeometry args={[0.4, 16, 16]} />
+        <meshBasicMaterial color="#ff0000" transparent opacity={0.8} />
+      </mesh>
+      
+      {/* Outer shockwave */}
+      <mesh>
+        <sphereGeometry args={[0.6, 16, 16]} />
+        <meshBasicMaterial color="#ffaa00" transparent opacity={0.6} wireframe />
+      </mesh>
+      
+      {/* Debris particles */}
+      {Array.from({ length: 20 }, (_, i) => (
+        <mesh key={i} position={[
+          (Math.random() - 0.5) * 2,
+          (Math.random() - 0.5) * 2,
+          (Math.random() - 0.5) * 2
+        ]}>
+          <sphereGeometry args={[0.02, 4, 4]} />
+          <meshBasicMaterial color="#ff6600" transparent opacity={0.7} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 
 // Camera controller component
 function CameraController() {
@@ -39,8 +106,17 @@ function CameraController() {
 }
 
 // Main scene content
-function SceneContent() {
+function SceneContent({ 
+  launchingAsteroid, 
+  setLaunchingAsteroid, 
+  setLaunchHandler
+}: { 
+  launchingAsteroid: ImpactScenario | null; 
+  setLaunchingAsteroid: (asteroid: ImpactScenario | null) => void;
+  setLaunchHandler: (handler: (scenario: ImpactScenario) => void) => void;
+}) {
   const { camera } = useThree();
+  const [impactPoint, setImpactPoint] = useState<THREE.Vector3 | null>(null);
   
   const handleScenarioSelect = (scenario: ImpactScenario) => {
     useAsteroidStore.getState().selectScenario(scenario);
@@ -63,6 +139,25 @@ function SceneContent() {
     camera.position.lerp(targetPosition, 0.1);
     camera.lookAt(0, 0, 0);
   };
+
+  const handleLaunch = async (scenario: ImpactScenario) => {
+    // Show explosion immediately at impact point
+    setLaunchingAsteroid(scenario);
+    
+    // Show explosion for 2 seconds
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Hide explosion and show impact visualization
+    setLaunchingAsteroid(null);
+    // The impact visualization will automatically show because the impact point is already set
+    // and showConsequences should be true
+  };
+
+  // Register the launch handler
+  useEffect(() => {
+    setLaunchHandler(() => handleLaunch);
+  }, [setLaunchHandler]);
+
 
   return (
     <>
@@ -95,10 +190,16 @@ function SceneContent() {
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
       
       {/* Earth */}
-      <Earth onScenarioSelect={handleScenarioSelect} />
+      <Earth 
+        onScenarioSelect={handleScenarioSelect} 
+        onImpactPointChange={setImpactPoint}
+      />
       
       {/* Asteroid Field (visible when zoomed out) */}
       <AsteroidField />
+      
+      {/* Impact Explosion */}
+      {launchingAsteroid && <ImpactExplosion asteroid={launchingAsteroid} impactPoint={impactPoint || undefined} />}
       
       {/* Camera Controls */}
       <CameraController />
@@ -107,9 +208,12 @@ function SceneContent() {
 }
 
 export default function SpaceScene() {
-  const { selectedAsteroidDetails, selectAsteroidDetails } = useAsteroidStore();
+  const { selectedAsteroidDetails, selectAsteroidDetails, showConsequences } = useAsteroidStore();
   const [realScenarios, setRealScenarios] = useState<ImpactScenario[]>([]);
   const [loading, setLoading] = useState(true);
+  const [launchingAsteroid, setLaunchingAsteroid] = useState<ImpactScenario | null>(null);
+  const [launchHandler, setLaunchHandler] = useState<((scenario: ImpactScenario) => void) | null>(null);
+  const [hasImpactPoint, setHasImpactPoint] = useState(false);
   
   // Load real NASA asteroid data
   useEffect(() => {
@@ -131,6 +235,11 @@ export default function SpaceScene() {
 
     loadRealData();
   }, []);
+
+  // Track when impact point is selected (when showConsequences is true and asteroid is selected)
+  useEffect(() => {
+    setHasImpactPoint(!!(selectedAsteroidDetails && showConsequences));
+  }, [selectedAsteroidDetails, showConsequences]);
   
   const focusOnScenario = (scenario: ImpactScenario) => {
     // This will be handled by the camera controller
@@ -161,7 +270,11 @@ export default function SpaceScene() {
           gl={{ antialias: true, alpha: true }}
         >
           <Suspense fallback={null}>
-            <SceneContent />
+            <SceneContent 
+              launchingAsteroid={launchingAsteroid} 
+              setLaunchingAsteroid={setLaunchingAsteroid}
+              setLaunchHandler={setLaunchHandler}
+            />
           </Suspense>
         </Canvas>
       </div>
@@ -190,6 +303,8 @@ export default function SpaceScene() {
       <AsteroidDetailsPanel 
         scenario={selectedAsteroidDetails}
         onClose={() => selectAsteroidDetails(null)}
+        onLaunch={launchHandler || undefined}
+        hasImpactPoint={hasImpactPoint}
       />
     </div>
   );

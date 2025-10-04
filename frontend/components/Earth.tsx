@@ -10,9 +10,10 @@ import { populationDensityService } from '@/lib/services/populationDensityServic
 
 interface EarthProps {
   onScenarioSelect?: (scenario: ImpactScenario) => void;
+  onImpactPointChange?: (point: THREE.Vector3 | null) => void;
 }
 
-export default function Earth({ onScenarioSelect }: EarthProps) {
+export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthProps) {
   const earthRef = useRef<THREE.Mesh>(null);
   const { camera } = useThree();
   const [impactPosition, setImpactPosition] = useState<THREE.Vector3 | null>(null);
@@ -26,7 +27,13 @@ export default function Earth({ onScenarioSelect }: EarthProps) {
   useMemo(() => {
     setImpactPosition(null);
     setLocalImpactPosition(null);
-  }, [selectedAsteroidDetails]);
+    onImpactPointChange?.(null);
+  }, [selectedAsteroidDetails, onImpactPointChange]);
+
+  // Notify parent when impact point changes
+  useMemo(() => {
+    onImpactPointChange?.(localImpactPosition);
+  }, [localImpactPosition, onImpactPointChange]);
   
   // Load Earth textures with fallback
   const [earthTexture, bumpMap] = useTexture([
