@@ -6,6 +6,7 @@ import DatePicker from './DatePicker';
 import CitySelector from './CitySelector';
 import { sortAsteroids, filterAsteroids, getThreatLevel, getThreatColor, formatDistance, formatEnergy } from '@/lib/utils/asteroidUtils';
 import { recalculateImpactForCity } from '@/lib/services/impactCalculator';
+import { getEnergyColor } from '@/lib/utils/asteroidColors';
 
 interface ScenarioPanelProps {
   scenarios: ImpactScenario[];
@@ -196,7 +197,8 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
                         </div>
                         <div className="text-right ml-2">
                           <div
-                            className="text-xs px-2 py-1 rounded text-white font-semibold bg-gray-700/80"
+                            style={{ backgroundColor: getEnergyColor(scenario.energy) }}
+                            className={`text-xs px-2 py-1 rounded text-white font-semibold `}
                           >
                             {formatEnergy(scenario.energy)}
                           </div>
