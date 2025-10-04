@@ -272,10 +272,6 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
             <span className="text-gray-400">Crater Size:</span>
             <span className="text-orange-400">{displayScenario.craterSize}km</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Estimated Casualties:</span>
-            <span className="text-red-400">{displayScenario.casualties.toLocaleString()}</span>
-          </div>
           {displayScenario.trajectory && (
             <>
               <div className="flex justify-between">
@@ -303,14 +299,14 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
             <div className="bg-red-900/20 p-3 rounded border-l-4 border-red-500">
               <div className="font-semibold text-red-400">Immediate Blast Zone</div>
               <div className="text-gray-300">
-                {displayScenario.consequences.immediateBlast.radius}km radius - {displayScenario.consequences.immediateBlast.fatalities.toLocaleString()} fatalities
+                {displayScenario.consequences.immediateBlast.radius}km radius
               </div>
             </div>
             
             <div className="bg-orange-900/20 p-3 rounded border-l-4 border-orange-500">
               <div className="font-semibold text-orange-400">Thermal Radiation Zone</div>
               <div className="text-gray-300">
-                {displayScenario.consequences.thermalRadiation.radius}km radius - {displayScenario.consequences.thermalRadiation.fatalities.toLocaleString()} fatalities
+                {displayScenario.consequences.thermalRadiation.radius}km radius
               </div>
             </div>
             
