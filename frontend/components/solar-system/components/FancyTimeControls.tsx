@@ -1,5 +1,5 @@
 import { TimeState } from '../utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface FancyTimeControlsProps {
   timeState: TimeState;
@@ -7,12 +7,17 @@ interface FancyTimeControlsProps {
   onResetToCurrentDate?: () => void;
 }
 
-export default function FancyTimeControls({ 
-  timeState, 
-  onTimeControlChange, 
-  onResetToCurrentDate 
+export default function FancyTimeControls({
+  timeState,
+  onTimeControlChange,
+  onResetToCurrentDate
 }: FancyTimeControlsProps) {
   const [sliderValue, setSliderValue] = useState(timeState.timeScale);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleSliderChange = (value: number) => {
     setSliderValue(value);
@@ -27,14 +32,14 @@ export default function FancyTimeControls({
   };
 
   const speedMarks = [-24, -12, -6, -1, 0, 1, 6, 12, 24];
-  
+
   // Create position mapping for accurate slider positioning
   const getSliderPosition = (value: number) => {
     const index = speedMarks.indexOf(value);
     if (index === -1) return 50; // default center
     return (index / (speedMarks.length - 1)) * 100;
   };
-  
+
   const getValueFromPosition = (position: number) => {
     const index = Math.round((position / 100) * (speedMarks.length - 1));
     return speedMarks[Math.max(0, Math.min(speedMarks.length - 1, index))];
@@ -46,7 +51,10 @@ export default function FancyTimeControls({
         {/* Header with Date and Reset Button */}
         <div className="flex items-center justify-center space-x-3 mb-3">
           <span className="text-xs text-gray-300 font-mono">
-            {timeState.currentDate.toLocaleDateString()} {timeState.currentDate.toLocaleTimeString()}
+            {isClient ?
+              `${timeState.currentDate.toLocaleDateString()} ${timeState.currentDate.toLocaleTimeString()}` :
+              'Loading...'
+            }
           </span>
           {onResetToCurrentDate && (
             <button
@@ -74,19 +82,18 @@ export default function FancyTimeControls({
               }}
               className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-fancy"
             />
-            
+
             {/* Speed markers with accurate positioning */}
             <div className="flex justify-between mt-1">
               {speedMarks.map((mark, index) => (
                 <button
                   key={mark}
                   onClick={() => handleSliderChange(mark)}
-                  className={`text-xs px-1 py-0.5 rounded transition-all ${
-                    sliderValue === mark 
-                      ? 'bg-blue-500 text-white' 
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                  }`}
-                  style={{ 
+                  className={`text-xs px-1 py-0.5 rounded transition-all ${sliderValue === mark
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    }`}
+                  style={{
                     position: 'relative',
                     flex: '0 0 auto',
                     minWidth: '24px'

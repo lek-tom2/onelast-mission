@@ -204,7 +204,7 @@ class TrajectoryCalculator {
     const nasaDataClone = JSON.parse(JSON.stringify(nasaObject));
 
     return {
-      id: nasaObject.id,
+      id: `${nasaObject.id}-${targetCity.name.replace(/\s+/g, '_')}`,
       name: `${nasaObject.name} Impact`,
       position: targetCity,
       city: targetCity.name,
