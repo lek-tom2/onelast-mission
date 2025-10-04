@@ -76,8 +76,10 @@ export default function SolarSystemContent({
   return (
     <>
       {/* Lighting */}
-      <ambientLight intensity={0.2} />
-      <pointLight position={[0, 0, 0]} intensity={2} color="#FFD700" />
+      <ambientLight intensity={0.6} />
+      <pointLight position={[0, 0, 0]} intensity={4} color="#FFD700" />
+      <pointLight position={[50, 50, 50]} intensity={1} color="#FFFFFF" />
+      <pointLight position={[-50, -50, -50]} intensity={0.5} color="#FFFFFF" />
       
       {/* Background stars */}
       <Stars radius={100} depth={50} count={8000} factor={4} saturation={0} fade />

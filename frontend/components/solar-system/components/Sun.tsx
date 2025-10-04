@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useLoader } from '@react-three/fiber';
 import { Billboard, Text } from '@react-three/drei';
 import { SUN_DATA } from '../constants/planetaryElements';
 import * as THREE from 'three';
@@ -10,6 +10,9 @@ interface SunProps {
 
 export default function Sun({ onDoubleClick }: SunProps) {
   const sunRef = useRef<THREE.Mesh>(null);
+  
+  // Load sun texture
+  const sunTexture = useLoader(THREE.TextureLoader, '/2k_sun.jpg');
   
   useFrame(() => {
     if (sunRef.current) {
@@ -34,17 +37,17 @@ export default function Sun({ onDoubleClick }: SunProps) {
       >
         <sphereGeometry args={[SUN_DATA.size, 32, 32]} />
         <meshBasicMaterial 
-          color={SUN_DATA.color}
+          map={sunTexture}
         />
       </mesh>
       
       {/* Sun glow effect */}
       <mesh>
-        <sphereGeometry args={[SUN_DATA.size * 1.2, 16, 16]} />
+        <sphereGeometry args={[SUN_DATA.size * 1.1, 16, 16]} />
         <meshBasicMaterial 
           color={SUN_DATA.color}
           transparent
-          opacity={0.3}
+          opacity={0.2}
         />
       </mesh>
       
