@@ -16,12 +16,12 @@ interface AsteroidWithImpactChance extends NEOObject {
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
 }
 
-export default function AsteroidListPanel({ 
-  asteroids, 
-  gameMode, 
-  onAsteroidClick, 
-  loading, 
-  error 
+export default function AsteroidListPanel({
+  asteroids,
+  gameMode,
+  onAsteroidClick,
+  loading,
+  error
 }: AsteroidListPanelProps) {
   const [sortBy, setSortBy] = useState<'name' | 'size' | 'impact' | 'hazard'>('impact');
   const [filterHazardous, setFilterHazardous] = useState(false);
@@ -32,14 +32,14 @@ export default function AsteroidListPanel({
       // Simplified impact calculation based on orbital elements
       const a = asteroid.orbitalElements.a[0];
       const e = asteroid.orbitalElements.e[0];
-      
+
       // Calculate perihelion distance
       const perihelion = a * (1 - e);
-      
+
       // Earth is at ~1 AU
       const earthDistance = 1.0;
       const minDistance = Math.abs(perihelion - earthDistance);
-      
+
       // Calculate impact chance (simplified)
       let impactChance = 0;
       if (minDistance < 0.05) { // Very close
@@ -51,13 +51,13 @@ export default function AsteroidListPanel({
       } else {
         impactChance = Math.max(0, Math.min(10, (1 - (minDistance * 2)) * 10));
       }
-      
+
       // Determine risk level
       let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
       if (impactChance > 70) riskLevel = 'critical';
       else if (impactChance > 40) riskLevel = 'high';
       else if (impactChance > 15) riskLevel = 'medium';
-      
+
       return {
         ...asteroid,
         impactChance: Math.round(impactChance * 10) / 10,
@@ -69,11 +69,11 @@ export default function AsteroidListPanel({
   // Filter and sort asteroids
   const filteredAndSorted = useMemo(() => {
     let filtered = asteroidsWithImpact;
-    
+
     if (filterHazardous) {
       filtered = filtered.filter(a => a.hazardous);
     }
-    
+
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
@@ -88,7 +88,7 @@ export default function AsteroidListPanel({
           return 0;
       }
     });
-    
+
     return filtered;
   }, [asteroidsWithImpact, sortBy, filterHazardous]);
 
@@ -124,7 +124,7 @@ export default function AsteroidListPanel({
           <label className="text-sm text-gray-400">Sort by:</label>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as 'name' | 'size' | 'impact' | 'hazard')}
             className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white text-sm"
           >
             <option value="impact">Impact Chance</option>
@@ -133,7 +133,7 @@ export default function AsteroidListPanel({
             <option value="hazard">Hazardous</option>
           </select>
         </div>
-        
+
         <label className="flex items-center space-x-2 text-sm">
           <input
             type="checkbox"
@@ -153,21 +153,21 @@ export default function AsteroidListPanel({
             Loading asteroids...
           </div>
         )}
-        
+
         {error && (
           <div className="text-center text-red-400 py-8">
             <div className="text-2xl mb-2">⚠️</div>
             Error loading asteroids: {error}
           </div>
         )}
-        
+
         {!loading && !error && filteredAndSorted.length === 0 && (
           <div className="text-center text-gray-400 py-8">
             <div className="text-2xl mb-2">🔍</div>
             No asteroids found with current filters
           </div>
         )}
-        
+
         {!loading && !error && filteredAndSorted.map((asteroid) => (
           <div
             key={asteroid.id}
@@ -182,7 +182,7 @@ export default function AsteroidListPanel({
                 {asteroid.riskLevel.toUpperCase()}
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <span className="text-gray-400">Impact Chance:</span>
@@ -205,7 +205,7 @@ export default function AsteroidListPanel({
                 </div>
               </div>
             </div>
-            
+
             {asteroid.closestApproach && (
               <div className="mt-2 text-xs">
                 <span className="text-gray-400">Closest Approach:</span>
@@ -217,7 +217,7 @@ export default function AsteroidListPanel({
           </div>
         ))}
       </div>
-      
+
       {/* Stats Footer */}
       <div className="p-4 border-t border-gray-700/50 bg-gray-800/50">
         <div className="grid grid-cols-3 gap-4 text-center text-xs">

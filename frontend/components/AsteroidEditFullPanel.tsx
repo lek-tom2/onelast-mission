@@ -20,10 +20,10 @@ interface AsteroidEditFullPanelProps {
   currentJulianDate?: number;
 }
 
-export default function AsteroidEditFullPanel({ 
-  asteroid, 
-  onClose, 
-  onSave, 
+export default function AsteroidEditFullPanel({
+  asteroid,
+  onClose,
+  onSave,
   onImpactPredictionUpdate,
   currentJulianDate
 }: AsteroidEditFullPanelProps) {
@@ -48,7 +48,7 @@ export default function AsteroidEditFullPanel({
         w_bar: asteroid.orbitalElements.w_bar[0] || 0,
         Omega: asteroid.orbitalElements.Omega[0] || 0
       });
-      
+
       // Calculate impact prediction
       const prediction = calculateImpactPrediction(asteroid, currentJulianDate);
       setImpactPrediction(prediction);
@@ -71,7 +71,7 @@ export default function AsteroidEditFullPanel({
           Omega: [editData.Omega, asteroid.orbitalElements.Omega[1]]
         }
       };
-      
+
       const prediction = calculateImpactPrediction(updatedAsteroid, currentJulianDate);
       setImpactPrediction(prediction);
       onImpactPredictionUpdate?.(prediction);
@@ -82,11 +82,11 @@ export default function AsteroidEditFullPanel({
   useEffect(() => {
     if (asteroid && currentJulianDate && impactPrediction?.closestApproachDate) {
       const closestApproachJD = impactPrediction.closestApproachDate.getTime() / 86400000 + 2440587.5; // Convert to Julian Date
-      
+
       // If current time has passed the closest approach date, recalculate for the next encounter
       if (currentJulianDate > closestApproachJD) {
         console.log('🔄 Closest approach date passed, recalculating next encounter...');
-        
+
         const updatedAsteroid: NEOObject = {
           ...asteroid,
           orbitalElements: {
@@ -99,7 +99,7 @@ export default function AsteroidEditFullPanel({
             Omega: [editData.Omega, asteroid.orbitalElements.Omega[1]]
           }
         };
-        
+
         const prediction = calculateImpactPrediction(updatedAsteroid, currentJulianDate);
         setImpactPrediction(prediction);
         onImpactPredictionUpdate?.(prediction);
@@ -112,7 +112,7 @@ export default function AsteroidEditFullPanel({
   const handleInputChange = (field: keyof EditableOrbitalElements, value: number) => {
     setEditData(prev => {
       const newData = { ...prev, [field]: value };
-      
+
       // Auto-save changes in real-time for immediate visual feedback
       if (asteroid) {
         const updatedAsteroid: NEOObject = {
@@ -130,7 +130,7 @@ export default function AsteroidEditFullPanel({
         // Delay auto-save to avoid too many updates
         setTimeout(() => onSave(updatedAsteroid), 100);
       }
-      
+
       return newData;
     });
   };
@@ -160,7 +160,7 @@ export default function AsteroidEditFullPanel({
     const perihelionDistance = semiMajorAxis * (1 - eccentricity);
     const earthDistance = 1.0;
     const minDistance = Math.abs(perihelionDistance - earthDistance);
-    
+
     return {
       willHitEarth: minDistance < 0.02,
       closestApproach: minDistance,
@@ -189,7 +189,7 @@ export default function AsteroidEditFullPanel({
           <div className="font-semibold text-white">{asteroid.name}</div>
           <div>Size: {asteroid.size.toFixed(3)} | Type: {asteroid.type}</div>
         </div>
-        
+
         {/* Mission Status */}
         <div className="mt-2 p-2 rounded-lg bg-blue-900/30 border border-blue-700/50">
           <div className="text-xs font-semibold">
@@ -204,7 +204,7 @@ export default function AsteroidEditFullPanel({
       {/* Impact Prediction */}
       <div className="p-4 border-b border-gray-700/50">
         <h3 className="text-lg font-bold text-white mb-3">🌍 Earth Impact Analysis</h3>
-        
+
         {impactPrediction && (
           <div className={`p-3 rounded-lg border mb-3 ${impactPrediction.willImpact ? 'border-red-500/50 bg-red-500/10' : 'border-orange-500/50 bg-orange-500/10'}`}>
             <div className="flex items-center justify-between mb-2">
@@ -213,12 +213,12 @@ export default function AsteroidEditFullPanel({
                 {impactPrediction.impactProbability.toFixed(1)}%
               </span>
             </div>
-            
+
             {/* Real-time update indicator */}
             <div className="text-xs text-blue-400 mb-2">
               📊 Updates in real-time as you modify parameters
             </div>
-            
+
             <div className="text-sm space-y-1">
               <div className="flex justify-between">
                 <span className="text-gray-400">Closest Approach:</span>
@@ -232,7 +232,7 @@ export default function AsteroidEditFullPanel({
                 <div className="flex justify-between">
                   <span className="text-gray-400">Impact Date:</span>
                   <span className="text-red-400 font-semibold">
-                    {impactPrediction.impactDate instanceof Date 
+                    {impactPrediction.impactDate instanceof Date
                       ? `${impactPrediction.impactDate.toLocaleDateString()} ${impactPrediction.impactDate.toLocaleTimeString()}`
                       : 'Invalid Date'
                     }
@@ -261,7 +261,7 @@ export default function AsteroidEditFullPanel({
       {/* Orbital Parameters Editor */}
       <div className="flex-1 overflow-y-auto p-4">
         <h3 className="text-lg font-bold text-white mb-4">⚙️ Orbital Parameters</h3>
-        
+
         <div className="space-y-4">
           {/* Semi-major axis */}
           <div>
@@ -280,7 +280,7 @@ export default function AsteroidEditFullPanel({
               Distance from Sun at semi-major axis. Earth = 1.0 AU
             </div>
           </div>
-          
+
           {/* Eccentricity */}
           <div>
             <label className="block text-sm text-gray-400 mb-2">
@@ -300,7 +300,7 @@ export default function AsteroidEditFullPanel({
               Oval shape: 0 = circle, 0.99 = very oval
             </div>
           </div>
-          
+
           {/* Inclination */}
           <div>
             <label className="block text-sm text-gray-400 mb-2">
@@ -317,10 +317,10 @@ export default function AsteroidEditFullPanel({
 
             />
             <div className="text-xs text-gray-500 mt-1">
-              Tilt of orbit relative to Earth's orbit
+              Tilt of orbit relative to Earth&apos;s orbit
             </div>
           </div>
-          
+
           {/* Mean Longitude */}
           <div>
             <label className="block text-sm text-gray-400 mb-2">
@@ -340,7 +340,7 @@ export default function AsteroidEditFullPanel({
               Current position in orbit (0-360°)
             </div>
           </div>
-          
+
           {/* Longitude of Perihelion */}
           <div>
             <label className="block text-sm text-gray-400 mb-2">
@@ -360,7 +360,7 @@ export default function AsteroidEditFullPanel({
               Direction of closest approach to Sun
             </div>
           </div>
-          
+
           {/* Longitude of Ascending Node */}
           <div>
             <label className="block text-sm text-gray-400 mb-2">

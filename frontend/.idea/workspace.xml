@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="e72c3d04-a3c5-4532-974e-7462e8a10d0f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/components/AsteroidDetailsPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/AsteroidDetailsPanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/CitySelector.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/CitySelector.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/Earth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/Earth.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/SpaceScene.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/SpaceScene.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/services/populationDensityService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/populationDensityService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/stores/useAsteroidStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/stores/useAsteroidStore.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 5
+}]]></component>
+  <component name="ProjectId" id="33cfwgnSGfx5ht28uf4vYGd59T2" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "Rebasing main",
+    "js.debugger.nextJs.config.created.client": "true",
+    "js.debugger.nextJs.config.created.server": "true",
+    "last_opened_file_path": "/home/tomek/onelast-mission/frontend",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager" selected="npm.Next.js: server-side">
+    <configuration name="Next.js: debug client-side" type="JavascriptDebugType" uri="http://localhost:3000/">
+      <method v="2" />
+    </configuration>
+    <configuration name="Next.js: server-side" type="js.build_tools.npm">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-f27c65a3e318-JavaScript-WS-251.23774.424" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e72c3d04-a3c5-4532-974e-7462e8a10d0f" name="Changes" comment="" />
+      <created>1759621520576</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1759621520576</updated>
+      <workItem from="1759621521695" duration="330000" />
+    </task>
+    <servers />
+  </component>
+</project>

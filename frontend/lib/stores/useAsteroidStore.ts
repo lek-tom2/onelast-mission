@@ -140,13 +140,6 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
   // Filtering and sorting actions
   setSortOption: (option) => set({ sortOption: option }),
   setFilterOption: (option) => set({ filterOption: option }),
-  setSelectedCity: (city: {
-    name: string;
-    lat: number;
-    lng: number;
-    country: string;
-    region: string;
-    density: number;
-  } | null) => set({ selectedCity: city }),
+  setSelectedCity: (city) => set({ selectedCity: city }),
   setGameMode: (mode) => set({ gameMode: mode })
 }));
