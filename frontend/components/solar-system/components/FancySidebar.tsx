@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PLANETARY_ELEMENTS } from '../constants/planetaryElements';
 import { TimeState, NEOObject } from '../utils';
+import { GameMode } from '@/lib/stores/useAsteroidStore';
 
 interface FancySidebarProps {
   timeState: TimeState;
@@ -11,6 +12,7 @@ interface FancySidebarProps {
   neoLoading: boolean;
   neoError: string | null;
   onNEOClick?: (neo: NEOObject) => void;
+  gameMode: GameMode;
 }
 
 interface ExpandableItemProps {
@@ -74,7 +76,8 @@ export default function FancySidebar({
   neoObjects,
   neoLoading,
   neoError,
-  onNEOClick
+  onNEOClick,
+  gameMode
 }: FancySidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 

@@ -4,9 +4,12 @@ import { Stars } from '@react-three/drei';
 import Sun from './Sun';
 import Planet from './Planet';
 import OrbitPath from './OrbitPath';
+import NEOComponent from './NEOComponent';
 import SolarSystemCameraController from './SolarSystemCameraController';
+import ClosestApproachMarkers from './ClosestApproachMarkers';
 import { PLANETARY_ELEMENTS } from '../constants/planetaryElements';
-import { TimeState, NEOObject } from '../utils';
+import { TimeState, NEOObject, ImpactPrediction } from '../utils';
+import { GameMode } from '@/lib/stores/useAsteroidStore';
 import * as THREE from 'three';
 
 interface SolarSystemContentProps {
@@ -19,6 +22,10 @@ interface SolarSystemContentProps {
   onResetCamera: () => void;
   onPlanetTarget: (planetKey?: keyof typeof PLANETARY_ELEMENTS | 'sun') => void;
   neoObjects: NEOObject[];
+  gameMode: GameMode;
+  onNEOClick?: (neo: NEOObject) => void;
+  editingAsteroid?: NEOObject | null;
+  impactPrediction?: ImpactPrediction | null;
 }
 
 export default function SolarSystemContent({
@@ -30,7 +37,11 @@ export default function SolarSystemContent({
   targetNEO,
   onResetCamera,
   onPlanetTarget,
-  neoObjects
+  neoObjects,
+  gameMode,
+  onNEOClick,
+  editingAsteroid,
+  impactPrediction
 }: SolarSystemContentProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
@@ -92,18 +103,27 @@ export default function SolarSystemContent({
           key={`${planetKey}-orbit`}
           elements={elements}
           color={elements.color}
+          highlighted={!!editingAsteroid && planetKey === 'earth'}
         />
       ))}
-
-      {/* NEO orbital paths */}
-      {neoObjects.map((neo) => (
-        <OrbitPath
-          key={`${neo.id}-orbit`}
-          elements={neo.orbitalElements}
-          color={neo.color}
-        />
-      ))}
-
+      
+      {/* NEO orbital paths - only show selected asteroid path in editing mode */}
+      {neoObjects.map((neo) => {
+        // In editing mode, only show the orbit of the selected asteroid
+        if (editingAsteroid && neo.id !== editingAsteroid.id) {
+          return null;
+        }
+        
+        return (
+          <OrbitPath 
+            key={`${neo.id}-orbit`}
+            elements={neo.orbitalElements}
+            color={editingAsteroid && neo.id === editingAsteroid.id ? '#FF6B6B' : neo.color}
+            highlighted={!!editingAsteroid && neo.id === editingAsteroid.id}
+          />
+        );
+      })}
+      
       {/* Planets using Keplerian mechanics */}
       {Object.keys(PLANETARY_ELEMENTS).map((planetKey) => (
         <Planet
@@ -113,14 +133,44 @@ export default function SolarSystemContent({
           onDoubleClick={handleObjectDoubleClick}
         />
       ))}
-
-
+      
+      {/* NEO Objects - only show selected asteroid in editing mode */}
+      {neoObjects.map((neo) => {
+        // In editing mode, only show the selected asteroid
+        if (editingAsteroid && neo.id !== editingAsteroid.id) {
+          return null;
+        }
+        
+        return (
+          <NEOComponent
+            key={neo.id}
+            neo={neo}
+            julianDate={timeState.julianDate}
+            onDoubleClick={handleObjectDoubleClick}
+            onNEOClick={onNEOClick}
+            gameMode={gameMode}
+          />
+        );
+      })}
+      
+      {/* Closest Approach Markers - Show during editing */}
+      {editingAsteroid && impactPrediction?.closestApproachPositions && (
+        <ClosestApproachMarkers
+          earthPosition={impactPrediction.closestApproachPositions.earth}
+          asteroidPosition={impactPrediction.closestApproachPositions.asteroid}
+          closestApproachDate={impactPrediction.closestApproachDate}
+          visible={true}
+        />
+      )}
+      
       {/* Camera controls */}
       <SolarSystemCameraController
         targetPlanetKey={targetPlanetKey}
         targetNEO={targetNEO}
         julianDate={timeState.julianDate}
         controlsRef={controlsRef}
+        editingAsteroid={editingAsteroid}
+        gameMode={gameMode}
       />
     </>
   );

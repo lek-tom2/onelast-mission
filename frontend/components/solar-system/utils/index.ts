@@ -23,6 +23,9 @@ export interface NEOObject {
   };
 }
 
+// Re-export ImpactPrediction from impactCalculation
+export type { ImpactPrediction } from './impactCalculation';
+
 // Sample NEO objects (this will be expanded)
 export const NEO_OBJECTS: NEOObject[] = [
   // Temporarily removed for testing

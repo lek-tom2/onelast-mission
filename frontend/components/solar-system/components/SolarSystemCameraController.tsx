@@ -12,13 +12,17 @@ interface SolarSystemCameraControllerProps {
   julianDate: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   controlsRef: React.RefObject<any>;
+  editingAsteroid?: NEOObject | null;
+  gameMode?: string;
 }
 
 export default function SolarSystemCameraController({ 
   targetPlanetKey,
   targetNEO,
   julianDate, 
-  controlsRef 
+  controlsRef,
+  editingAsteroid,
+  gameMode
 }: SolarSystemCameraControllerProps) {
   const { camera } = useThree();
   const { updateCameraState } = useAsteroidStore();
@@ -26,7 +30,13 @@ export default function SolarSystemCameraController({
   // Track moving target
   useFrame(() => {
     if (controlsRef.current) {
-      if (targetNEO) {
+      if (editingAsteroid && gameMode === 'destroy_earth') {
+        // Editing mode - let user control camera manually, no auto-targeting
+        // This allows free camera movement while editing asteroid trajectory
+        if (controlsRef.current) {
+          controlsRef.current.update();
+        }
+      } else if (targetNEO) {
         // Target a specific NEO object - convert orbital elements to compatible format
         const neoElements = {
           name: targetNEO.name,

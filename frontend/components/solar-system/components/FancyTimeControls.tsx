@@ -5,12 +5,14 @@ interface FancyTimeControlsProps {
   timeState: TimeState;
   onTimeControlChange: (timeScale: number, playing: boolean) => void;
   onResetToCurrentDate?: () => void;
+  editingMode?: boolean;
 }
 
 export default function FancyTimeControls({
   timeState,
   onTimeControlChange,
-  onResetToCurrentDate
+  onResetToCurrentDate,
+  editingMode
 }: FancyTimeControlsProps) {
   const [sliderValue, setSliderValue] = useState(timeState.timeScale);
   const [isClient, setIsClient] = useState(false);
@@ -19,10 +21,23 @@ export default function FancyTimeControls({
     setIsClient(true);
   }, []);
 
+  // Sync slider value with time state
+  useEffect(() => {
+    setSliderValue(timeState.timeScale);
+  }, [timeState.timeScale]);
+
   const handleSliderChange = (value: number) => {
+    console.log('🎛️ Slider change:', { value, editingMode });
     setSliderValue(value);
-    // Always set playing to true when slider changes, pause only when value is 0
-    onTimeControlChange(value, value !== 0);
+    // In editing mode, keep time paused unless user explicitly wants to run time
+    if (editingMode) {
+      console.log('⏸️ In editing mode - allowing time control for trajectory planning');
+      onTimeControlChange(value, value !== 0);
+    } else {
+      console.log('▶️ Normal mode - setting playing to:', value !== 0);
+      // Normal mode: set playing to true when slider changes, pause only when value is 0
+      onTimeControlChange(value, value !== 0);
+    }
   };
 
   const getSpeedLabel = (speed: number) => {
@@ -66,6 +81,18 @@ export default function FancyTimeControls({
             </button>
           )}
         </div>
+
+        {/* Mission Status */}
+        {editingMode && (
+          <div className="mb-3 p-2 rounded-lg text-center bg-blue-900/30 border border-blue-700/50">
+            <div className="text-xs font-semibold">
+              ⏸️ TRAJECTORY PLANNING
+            </div>
+            <div className="text-xs text-gray-300">
+              Use time controls to see trajectory over time
+            </div>
+          </div>
+        )}
 
         {/* Speed Slider */}
         <div className="mb-2">

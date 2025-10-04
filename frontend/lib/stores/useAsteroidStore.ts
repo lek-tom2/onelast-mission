@@ -4,6 +4,7 @@ import * as THREE from 'three';
 
 export type SortOption = 'nearest' | 'furthest' | 'highest_energy' | 'lowest_energy' | 'largest' | 'smallest' | 'most_dangerous' | 'least_dangerous';
 export type FilterOption = 'all' | 'hazardous' | 'close_approach' | 'high_energy' | 'large_size';
+export type GameMode = 'real_orbit' | 'destroy_earth';
 
 interface AsteroidStore {
   // State
@@ -14,6 +15,7 @@ interface AsteroidStore {
   isPlaying: boolean;
   showTrajectories: boolean;
   showConsequences: boolean;
+  gameMode: GameMode;
   
   // Filtering and sorting
   sortOption: SortOption;
@@ -31,6 +33,7 @@ interface AsteroidStore {
   toggleTrajectories: () => void;
   toggleConsequences: () => void;
   generateRandomAsteroids: (count: number) => void;
+  setGameMode: (mode: GameMode) => void;
   
   // Filtering and sorting actions
   setSortOption: (option: SortOption) => void;
@@ -52,6 +55,7 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
   isPlaying: false,
   showTrajectories: true,
   showConsequences: true,
+  gameMode: 'real_orbit',
   
   // Filtering and sorting
   sortOption: 'nearest',
@@ -122,5 +126,6 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
   // Filtering and sorting actions
   setSortOption: (option) => set({ sortOption: option }),
   setFilterOption: (option) => set({ filterOption: option }),
-  setSelectedCity: (city) => set({ selectedCity: city })
+  setSelectedCity: (city) => set({ selectedCity: city }),
+  setGameMode: (mode) => set({ gameMode: mode })
 }));

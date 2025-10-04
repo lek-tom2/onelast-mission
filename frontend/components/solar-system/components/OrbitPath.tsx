@@ -6,9 +6,10 @@ interface OrbitPathProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   elements: any;
   color: string;
+  highlighted?: boolean;
 }
 
-export default function OrbitPath({ elements, color }: OrbitPathProps) {
+export default function OrbitPath({ elements, color, highlighted = false }: OrbitPathProps) {
   const orbitPoints = useMemo(() => generateOrbitPoints(elements), [elements]);
   
   return (
@@ -16,8 +17,8 @@ export default function OrbitPath({ elements, color }: OrbitPathProps) {
       points={orbitPoints}
       color={color}
       transparent
-      opacity={0.4}
-      lineWidth={1}
+      opacity={highlighted ? 0.9 : 0.4}
+      lineWidth={highlighted ? 3 : 1}
     />
   );
 }
