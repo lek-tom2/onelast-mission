@@ -108,24 +108,24 @@ function AsteroidTrajectory({ asteroid, impactPoint }: { asteroid: ImpactScenari
 
   // Calculate asteroid size based on energy
   const asteroidSize = useMemo(() => {
-    // Energy is in megatons, scale asteroid size from 0.017 to 0.1 (3x smaller)
+    // Energy is in megatons, scale asteroid size from 0.006 to 0.033 (3x smaller than before)
     const minEnergy = 0.1; // 0.1 megatons
     const maxEnergy = 1000; // 1000 megatons
     const energy = Math.max(minEnergy, Math.min(maxEnergy, asteroid.energy));
 
     // Logarithmic scaling for better visual distribution
     const logScale = Math.log10(energy / minEnergy) / Math.log10(maxEnergy / minEnergy);
-    return Math.max(0.017, Math.min(0.1, 0.027 + logScale * 0.073));
+    return Math.max(0.006, Math.min(0.033, 0.009 + logScale * 0.024));
   }, [asteroid.energy]);
 
   // Calculate trail length based on energy (larger asteroids have longer trails)
   const trailLength = useMemo(() => {
-    return Math.max(10, Math.min(27, Math.floor(17 * (0.5 + asteroidSize * 2))));
+    return Math.max(3, Math.min(9, Math.floor(6 * (0.5 + asteroidSize * 2))));
   }, [asteroidSize]);
 
   const { startPos, endPos } = useMemo(() => {
     const startPos = camera.position.clone(); // Start from camera position
-    const endPos = impactPoint ? impactPoint.clone().multiplyScalar(1.1) : new THREE.Vector3(0, 0, 1);
+    const endPos = impactPoint ? impactPoint.clone() : new THREE.Vector3(0, 0, 1);
     return { startPos, endPos };
   }, [impactPoint, camera.position]);
 
@@ -178,7 +178,7 @@ function AsteroidTrajectory({ asteroid, impactPoint }: { asteroid: ImpactScenari
       </mesh>
       <points ref={trailRef} geometry={trailGeometry}>
         <pointsMaterial
-          size={0.01 * asteroidSize}
+          size={0.003 * asteroidSize}
           color="#ffaa00"
           transparent
           opacity={0.8}
@@ -269,7 +269,7 @@ function SceneContent({
     const maxEnergy = 1000;
     const energy = Math.max(minEnergy, Math.min(maxEnergy, scenario.energy));
     const logScale = Math.log10(energy / minEnergy) / Math.log10(maxEnergy / minEnergy);
-    const asteroidSize = Math.max(0.017, Math.min(0.1, 0.027 + logScale * 0.073));
+    const asteroidSize = Math.max(0.006, Math.min(0.033, 0.009 + logScale * 0.024));
     const trajectoryDuration = Math.max(0.8, Math.min(2.0, 1.0 + asteroidSize * 2)) * 1000; // Convert to milliseconds
 
     // Calculate explosion duration based on energy
