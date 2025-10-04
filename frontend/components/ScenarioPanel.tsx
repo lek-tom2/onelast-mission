@@ -67,6 +67,50 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
           </div>
         )}
 
+        {/* City Selector */}
+        <div className="mb-4">
+          <CitySelector 
+            selectedCity={selectedCity}
+            onCitySelect={setSelectedCity}
+          />
+        </div>
+
+        {/* Filter Controls */}
+        <div className="mb-4 space-y-2">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Filter</label>
+            <select
+              value={filterOption}
+              onChange={(e) => setFilterOption(e.target.value as FilterOption)}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white"
+            >
+              <option value="all">All Asteroids</option>
+              <option value="hazardous">Potentially Hazardous</option>
+              <option value="close_approach">Close Approach (&lt;1M km)</option>
+              <option value="high_energy">High Energy (&gt;100 MT)</option>
+              <option value="large_size">Large Size (&gt;100m)</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Sort By</label>
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as SortOption)}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white"
+            >
+              <option value="nearest">Nearest to Earth</option>
+              <option value="furthest">Furthest from Earth</option>
+              <option value="highest_energy">Highest Energy</option>
+              <option value="lowest_energy">Lowest Energy</option>
+              <option value="largest">Largest Size</option>
+              <option value="smallest">Smallest Size</option>
+              <option value="most_dangerous">Most Dangerous</option>
+              <option value="least_dangerous">Least Dangerous</option>
+            </select>
+          </div>
+        </div>
+
         {/* Controls */}
         <div className="flex gap-2">
           <button
@@ -99,43 +143,93 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
 
           {/* Scenario List */}
           <div className="space-y-2">
-            {scenarios.map((scenario) => (
-              <div
-                key={scenario.id}
-                onClick={() => {
-                  onScenarioSelect(scenario);
-                  selectAsteroidDetails(scenario);
-                }}
-                className={`p-3 rounded cursor-pointer transition-all ${
-                  selectedScenario?.id === scenario.id
-                    ? 'bg-red-600 border-2 border-red-400'
-                    : 'bg-gray-700 hover:bg-gray-600 border-2 border-transparent'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-sm">{scenario.name}</h3>
-                    <p className="text-xs text-gray-300">{scenario.city}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className={`text-xs px-2 py-1 rounded ${
-                      scenario.energy > 1000 ? 'bg-red-500' :
-                      scenario.energy > 500 ? 'bg-orange-500' : 'bg-green-500'
-                    }`}>
-                      {scenario.energy} MT
+            <div className="text-xs text-gray-400 mb-2">
+              Showing {processedScenarios.length} of {scenarios.length} asteroids
+            </div>
+            
+            {processedScenarios.map((scenario) => {
+              const threatLevel = getThreatLevel(scenario);
+              const threatColor = getThreatColor(threatLevel);
+              
+              return (
+                <div
+                  key={scenario.id}
+                  onClick={() => {
+                    // Just open the details panel - user will select city there
+                    selectAsteroidDetails(scenario);
+                  }}
+                  className={`p-3 rounded cursor-pointer transition-all ${
+                    selectedScenario?.id === scenario.id
+                      ? 'bg-red-600 border-2 border-red-400'
+                      : 'bg-gray-700 hover:bg-gray-600 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-sm truncate">{scenario.nasaData?.name || scenario.name}</h3>
+                      <p className="text-xs text-gray-300">Click to select impact city</p>
+                    </div>
+                    <div className="text-right ml-2">
+                      <div 
+                        className="text-xs px-2 py-1 rounded text-white font-semibold"
+                        style={{ backgroundColor: threatColor }}
+                      >
+                        {formatEnergy(scenario.energy)}
+                      </div>
                     </div>
                   </div>
+                  
+                  <div className="mt-2 space-y-1 text-xs text-gray-400">
+                    <div className="flex justify-between">
+                      <span>Size:</span>
+                      <span>{scenario.asteroidSize.toFixed(0)}m</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Distance:</span>
+                      <span>{scenario.trajectory ? formatDistance(scenario.trajectory.closestApproach) : 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Velocity:</span>
+                      <span>{scenario.trajectory ? `${scenario.trajectory.velocity.toFixed(1)} km/s` : 'N/A'}</span>
+                    </div>
+                    {scenario.collisionProbability !== undefined && (
+                      <div className="flex justify-between">
+                        <span>Collision Risk:</span>
+                        <span className={`font-semibold ${
+                          scenario.collisionProbability > 0.1 ? 'text-red-400' :
+                          scenario.collisionProbability > 0.05 ? 'text-orange-400' :
+                          scenario.collisionProbability > 0.01 ? 'text-yellow-400' : 'text-green-400'
+                        }`}>
+                          {(scenario.collisionProbability * 100).toFixed(2)}%
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span>Casualties:</span>
+                      <span className="text-red-300">{scenario.casualties.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Threat Level Indicator */}
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: threatColor }}
+                      ></div>
+                      <span className="text-xs font-medium capitalize" style={{ color: threatColor }}>
+                        {threatLevel} Threat
+                      </span>
+                    </div>
+                    {scenario.nasaData?.is_potentially_hazardous_asteroid && (
+                      <span className="text-xs px-2 py-1 bg-red-900 text-red-300 rounded">
+                        ⚠️ Hazardous
+                      </span>
+                    )}
+                  </div>
                 </div>
-                
-                <div className="mt-2 text-xs text-gray-400">
-                  <div>Asteroid Size: {scenario.asteroidSize}m</div>
-                  <div>Casualties: {scenario.casualties.toLocaleString()}</div>
-                  {scenario.trajectory && (
-                    <div>Velocity: {scenario.trajectory.velocity} km/s</div>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Selected Scenario Details */}
@@ -143,21 +237,28 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
             <div className="mt-4 space-y-4">
               {/* Impact Analysis */}
               <div className="p-3 bg-gray-800 rounded">
-                <h4 className="font-semibold mb-2">Impact Analysis</h4>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold">Impact Analysis</h4>
+                  {selectedCity && (
+                    <span className="text-xs px-2 py-1 bg-blue-600 text-white rounded">
+                      📍 {selectedCity.name}
+                    </span>
+                  )}
+                </div>
                 {selectedScenario.consequences && (
                   <div className="space-y-2 text-xs">
                     <div>
-                      <span className="text-red-400">Immediate Blast:</span> {selectedScenario.consequences.immediateBlast.radius}km radius
+                      <span className="text-red-400">Immediate Blast:</span> {selectedScenario.consequences.immediateBlast.radius.toFixed(1)}km radius
                     </div>
                     <div>
-                      <span className="text-orange-400">Thermal Radiation:</span> {selectedScenario.consequences.thermalRadiation.radius}km radius
+                      <span className="text-orange-400">Thermal Radiation:</span> {selectedScenario.consequences.thermalRadiation.radius.toFixed(1)}km radius
                     </div>
                     <div>
-                      <span className="text-yellow-400">Seismic Effects:</span> Magnitude {selectedScenario.consequences.seismicEffects.magnitude}
+                      <span className="text-yellow-400">Seismic Effects:</span> Magnitude {selectedScenario.consequences.seismicEffects.magnitude.toFixed(1)}
                     </div>
                     {selectedScenario.consequences.tsunami && (
                       <div>
-                        <span className="text-blue-400">Tsunami:</span> {selectedScenario.consequences.tsunami.height}m height
+                        <span className="text-blue-400">Tsunami:</span> {selectedScenario.consequences.tsunami.height.toFixed(1)}m height
                       </div>
                     )}
                     {selectedScenario.consequences.atmosphericEffects.nuclearWinter && (
@@ -216,19 +317,34 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => selectAsteroidDetails(selectedScenario)}
-                  className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-semibold transition-colors"
-                >
-                  View Full Details
-                </button>
-                <button
-                  onClick={() => onFocus && onFocus(selectedScenario)}
-                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
-                >
-                  Focus
-                </button>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => selectAsteroidDetails(selectedScenario)}
+                    className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-semibold transition-colors"
+                  >
+                    View Full Details
+                  </button>
+                  <button
+                    onClick={() => onFocus && onFocus(selectedScenario)}
+                    className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
+                  >
+                    Focus
+                  </button>
+                </div>
+                
+                {selectedCity && (
+                  <button
+                    onClick={() => {
+                      const recalculatedScenario = recalculateImpactForCity(selectedScenario, selectedCity);
+                      onScenarioSelect(recalculatedScenario);
+                      selectAsteroidDetails(recalculatedScenario);
+                    }}
+                    className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold transition-colors"
+                  >
+                    🔄 Recalculate for {selectedCity.name}
+                  </button>
+                )}
               </div>
             </div>
           )}

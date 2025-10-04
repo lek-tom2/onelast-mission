@@ -289,25 +289,7 @@ function RealAsteroidObject({ scenario }: { scenario: ImpactScenario }) {
         </mesh>
       </mesh>
       
-      {/* Trajectory line */}
-      {scenario.trajectory && (
-        <line>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={scenario.trajectory.points.length}
-              array={new Float32Array(scenario.trajectory.points.flatMap(p => [p.x, p.y, p.z]))}
-              itemSize={3}
-              args={[new Float32Array(scenario.trajectory.points.flatMap(p => [p.x, p.y, p.z])), 3]}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial 
-            color={getThreatColor(scenario.collisionProbability)} 
-            transparent 
-            opacity={0.6}
-          />
-        </line>
-      )}
+      {/* Trajectory lines removed for cleaner visualization */}
     </group>
   );
 }
