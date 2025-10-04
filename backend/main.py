@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 import requests
 from fastapi.middleware.cors import CORSMiddleware
+from websockets_time import app_ws
 
 load_dotenv()
 api_key = os.getenv('API_KEY')
@@ -21,12 +22,14 @@ app.add_middleware(
 
 async def neo_all(start_date: str, end_date: str):
     req = requests.get(f"https://api.nasa.gov/neo/rest/v1/feed?start_date={start_date}&end_date={end_date}&api_key={api_key}")
+    print(req)
     data = req.json()
     
     return data
 
 async def neo_one(neo_id: int):
     req = requests.get(f"https://api.nasa.gov/neo/rest/v1/neo/{neo_id}?api_key={api_key}")
+    print(req)
     data = req.json()
 
     return data
@@ -67,6 +70,8 @@ async def get_neo_per_obj(start_date: str, end_date: str):
         neo_params[data['name']] = data['orbital_data']
 
     return JSONResponse(content=neo_params)
+
+app.include_router(app_ws, prefix='/time')
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True, host="127.0.0.1", port=8000, log_level="info")
