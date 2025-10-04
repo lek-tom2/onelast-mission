@@ -1,0 +1,96 @@
+{
+  "links": {
+    "self": "http://api.nasa.gov/neo/rest/v1/neo/54549130?api_key=3hMFcVGG3bILl6a9mBxBdjkWU71phGNDfEmA4fl4"
+  },
+  "id": "54549130",
+  "neo_reference_id": "54549130",
+  "name": "(2025 SO27)",
+  "designation": "2025 SO27",
+  "nasa_jpl_url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=54549130",
+  "absolute_magnitude_h": 27.41,
+  "estimated_diameter": {
+    "kilometers": {
+      "estimated_diameter_min": 0.0087610261,
+      "estimated_diameter_max": 0.01959025
+    },
+    "meters": {
+      "estimated_diameter_min": 8.7610261497,
+      "estimated_diameter_max": 19.5902500233
+    },
+    "miles": {
+      "estimated_diameter_min": 0.0054438476,
+      "estimated_diameter_max": 0.0121728132
+    },
+    "feet": {
+      "estimated_diameter_min": 28.7435250329,
+      "estimated_diameter_max": 64.2724758865
+    }
+  },
+  "is_potentially_hazardous_asteroid": false,
+  "close_approach_data": [
+    {
+      "close_approach_date": "2025-10-05",
+      "close_approach_date_full": "2025-Oct-05 14:38",
+      "epoch_date_close_approach": 1759675080000,
+      "relative_velocity": {
+        "kilometers_per_second": "6.4809213857",
+        "kilometers_per_hour": "23331.3169883594",
+        "miles_per_hour": "14497.1730475725"
+      },
+      "miss_distance": {
+        "astronomical": "0.026392685",
+        "lunar": "10.266754465",
+        "kilometers": "3948289.45958095",
+        "miles": "2453353.30667911"
+      },
+      "orbiting_body": "Earth"
+    },
+    {
+      "close_approach_date": "2172-09-25",
+      "close_approach_date_full": "2172-Sep-25 20:06",
+      "epoch_date_close_approach": 6397733160000,
+      "relative_velocity": {
+        "kilometers_per_second": "8.173000354",
+        "kilometers_per_hour": "29422.8012743713",
+        "miles_per_hour": "18282.1844918448"
+      },
+      "miss_distance": {
+        "astronomical": "0.0929711182",
+        "lunar": "36.1657649798",
+        "kilometers": "13908281.254238234",
+        "miles": "8642205.2270022692"
+      },
+      "orbiting_body": "Earth"
+    }
+  ],
+  "orbital_data": {
+    "orbit_id": "2",
+    "orbit_determination_date": "2025-10-02 06:59:38",
+    "first_observation_date": "2025-09-30",
+    "last_observation_date": "2025-10-02",
+    "data_arc_in_days": 2,
+    "observations_used": 27,
+    "orbit_uncertainty": "7",
+    "minimum_orbit_intersection": ".0259966",
+    "jupiter_tisserand_invariant": "4.624",
+    "epoch_osculation": "2461000.5",
+    "eccentricity": ".2959356609555459",
+    "semi_major_axis": "1.431983925375304",
+    "inclination": "8.973120732579188",
+    "ascending_node_longitude": "188.9138399417375",
+    "orbital_period": "625.9009938553622",
+    "perihelion_distance": "1.008208815941646",
+    "perihelion_argument": "204.9480497122039",
+    "aphelion_distance": "1.855759034808961",
+    "perihelion_time": "2460973.615350031562",
+    "mean_anomaly": "15.46326668858764",
+    "mean_motion": ".5751708393727066",
+    "equinox": "J2000",
+    "orbit_class": {
+      "orbit_class_type": "APO",
+      "orbit_class_description": "Near-Earth asteroid orbits which cross the Earth\u2019s orbit similar to that of 1862 Apollo",
+      "orbit_class_range": "a (semi-major axis) > 1.0 AU; q (perihelion) < 1.017 AU"
+    }
+  },
+  "is_sentry_object": false
+}

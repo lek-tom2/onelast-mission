@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import os
 import requests
 from fastapi.middleware.cors import CORSMiddleware
+from websockets_time import app_ws
+import json
 
 load_dotenv()
 api_key = os.getenv('API_KEY')
@@ -21,16 +23,36 @@ app.add_middleware(
 )
 
 async def neo_all(start_date: str, end_date: str):
-    print(api_key)
     req = requests.get(f"https://api.nasa.gov/neo/rest/v1/feed?start_date={start_date}&end_date={end_date}&api_key={api_key}")
     data = req.json()
     
+    # Use absolute path from current directory
+    base_dir = os.path.join(os.getcwd(), 'neo_all')
+    os.makedirs(base_dir, exist_ok=True)
+    
+    file_path = os.path.join(base_dir, f'{start_date}_{end_date}.json')
+    
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+    
+    print(f"File successfully written to: {file_path}")
     return data
 
 async def neo_one(neo_id: int):
+    print(f"Current working directory: {os.getcwd()}")
+    
     req = requests.get(f"https://api.nasa.gov/neo/rest/v1/neo/{neo_id}?api_key={api_key}")
     data = req.json()
-
+    
+    base_dir = os.path.join(os.getcwd(), 'neo_one')
+    os.makedirs(base_dir, exist_ok=True)
+    
+    file_path = os.path.join(base_dir, f'{neo_id}.json')
+    
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+    
+    print(f"File successfully written to: {file_path}")
     return data
 
 @app.get("/")
@@ -105,6 +127,8 @@ async def get_neo_per_obj(start_date: str, end_date: str):
     except Exception as e:
         print(f"Error in get_neo_per_obj: {str(e)}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+app.include_router(app_ws, prefix='/time')
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True, host="127.0.0.1", port=8000, log_level="info")
