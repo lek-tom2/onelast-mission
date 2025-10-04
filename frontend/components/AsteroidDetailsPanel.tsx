@@ -15,6 +15,10 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
   
   if (!scenario) return null;
 
+  // Debug logging to see what data we're getting
+  console.log('AsteroidDetailsPanel - scenario:', scenario);
+  console.log('AsteroidDetailsPanel - nasaData:', scenario.nasaData);
+
   // Use calculated scenario if available, otherwise use original
   const displayScenario = calculatedScenario || scenario;
 
@@ -103,31 +107,33 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
       {/* Basic Information */}
       <div className="space-y-4 mb-6">
         <div>
-          <h3 className="text-lg font-semibold mb-2">Basic Information</h3>
+          <h3 className="text-lg font-semibold mb-2 text-blue-400">NASA Asteroid Data</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-400">Name:</span>
-              <span className="font-semibold">{displayScenario.nasaData?.name || displayScenario.name}</span>
+              <span className="text-gray-400">NASA ID:</span>
+              <span className="font-mono text-blue-300">{displayScenario.nasaData?.id || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">City:</span>
-              <span>{displayScenario.city}</span>
+              <span className="text-gray-400">Official Name:</span>
+              <span className="font-semibold text-blue-300">{displayScenario.nasaData?.name || displayScenario.name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Diameter:</span>
-              <span>{displayScenario.asteroidSize}m</span>
+              <span className="text-gray-400">Potentially Hazardous:</span>
+              <span className={displayScenario.nasaData?.is_potentially_hazardous_asteroid ? 'text-red-400 font-bold' : 'text-green-400'}>
+                {displayScenario.nasaData?.is_potentially_hazardous_asteroid ? 'YES' : 'No'}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Composition:</span>
-              <span>{composition}</span>
+              <span className="text-gray-400">Absolute Magnitude:</span>
+              <span>{displayScenario.nasaData?.absolute_magnitude_h || 'N/A'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Threat Level:</span>
-              <span 
-                className="font-bold px-2 py-1 rounded text-xs"
-                style={{ backgroundColor: threat.color + '20', color: threat.color }}
-              >
-                {threat.level}
+              <span className="text-gray-400">Diameter Range:</span>
+              <span>
+                {displayScenario.nasaData?.estimated_diameter?.meters ? 
+                  `${displayScenario.nasaData.estimated_diameter.meters.estimated_diameter_min.toFixed(0)} - ${displayScenario.nasaData.estimated_diameter.meters.estimated_diameter_max.toFixed(0)}m` : 
+                  'N/A'
+                }
               </span>
             </div>
             
@@ -149,11 +155,41 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
             )}
           </div>
         </div>
+        
+        {/* Close Approach Data */}
+        {displayScenario.nasaData?.close_approach_data && displayScenario.nasaData.close_approach_data[0] && (
+          <div>
+            <h3 className="text-lg font-semibold mb-2 text-yellow-400">Close Approach Data</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Approach Date:</span>
+                <span className="text-yellow-400">{displayScenario.nasaData.close_approach_data[0].close_approach_date_full}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Miss Distance:</span>
+                <span className="text-green-400">
+                  {parseFloat(displayScenario.nasaData.close_approach_data[0].miss_distance.kilometers).toLocaleString()} km
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Relative Velocity:</span>
+                <span className="text-orange-400">
+                  {parseFloat(displayScenario.nasaData.close_approach_data[0].relative_velocity.kilometers_per_second).toFixed(1)} km/s
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Orbiting Body:</span>
+                <span className="text-blue-400">{displayScenario.nasaData.close_approach_data[0].orbiting_body}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Impact Data */}
+      {/* Simulated Impact Data */}
       <div className="space-y-4 mb-6">
-        <h3 className="text-lg font-semibold">Impact Data</h3>
+        <h3 className="text-lg font-semibold text-orange-400">Simulated Impact Data</h3>
+        <p className="text-xs text-gray-400 mb-3">Calculated based on asteroid properties for educational purposes</p>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Energy Release:</span>
@@ -237,68 +273,17 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
         </div>
       )}
 
-      {/* NASA Data Section */}
-      {displayScenario.nasaData && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-blue-400">NASA Data</h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-400">NASA ID:</span>
-              <span className="font-mono text-blue-300">{displayScenario.nasaData.id}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Official Name:</span>
-              <span className="text-blue-300">{displayScenario.nasaData.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Potentially Hazardous:</span>
-              <span className={displayScenario.nasaData.is_potentially_hazardous_asteroid ? 'text-red-400 font-bold' : 'text-green-400'}>
-                {displayScenario.nasaData.is_potentially_hazardous_asteroid ? 'YES' : 'No'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Absolute Magnitude:</span>
-              <span>{displayScenario.nasaData.absolute_magnitude_h}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Diameter Range:</span>
-              <span>
-                {displayScenario.nasaData.estimated_diameter.meters.estimated_diameter_min.toFixed(0)} - {displayScenario.nasaData.estimated_diameter.meters.estimated_diameter_max.toFixed(0)}m
-              </span>
-            </div>
-            
-            {displayScenario.nasaData.close_approach_data && displayScenario.nasaData.close_approach_data[0] && (
-              <>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Close Approach:</span>
-                  <span className="text-yellow-400">{displayScenario.nasaData.close_approach_data[0].close_approach_date_full}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Miss Distance:</span>
-                  <span className="text-green-400">
-                    {parseFloat(displayScenario.nasaData.close_approach_data[0].miss_distance.kilometers).toLocaleString()} km
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Relative Velocity:</span>
-                  <span className="text-orange-400">
-                    {parseFloat(displayScenario.nasaData.close_approach_data[0].relative_velocity.kilometers_per_second).toFixed(1)} km/s
-                  </span>
-                </div>
-              </>
-            )}
-            
-            <div className="mt-3 pt-3 border-t border-gray-700">
-              <a 
-                href={displayScenario.nasaData.nasa_jpl_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline text-xs"
-              >
-                View on NASA JPL Small-Body Database →
-              </a>
-            </div>
-          </div>
+      {/* NASA JPL Database Link */}
+      {displayScenario.nasaData?.nasa_jpl_url && (
+        <div className="mt-4 pt-4 border-t border-gray-700">
+          <a 
+            href={displayScenario.nasaData.nasa_jpl_url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 underline text-sm flex items-center"
+          >
+            🔗 View on NASA JPL Small-Body Database →
+          </a>
         </div>
       )}
     </div>

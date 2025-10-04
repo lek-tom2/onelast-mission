@@ -198,6 +198,16 @@ class TrajectoryCalculator {
     const diameter = (nasaObject.estimated_diameter.meters.estimated_diameter_min + 
                      nasaObject.estimated_diameter.meters.estimated_diameter_max) / 2;
     
+    // Deep clone the NASA object to avoid reference issues
+    const nasaDataClone = JSON.parse(JSON.stringify(nasaObject));
+    
+    console.log('Converting asteroid:', {
+      originalId: nasaObject.id,
+      originalName: nasaObject.name,
+      clonedId: nasaDataClone.id,
+      clonedName: nasaDataClone.name
+    });
+    
     return {
       id: nasaObject.id,
       name: `${nasaObject.name} Impact`,
@@ -211,7 +221,7 @@ class TrajectoryCalculator {
       craterSize: Math.pow(trajectoryData.impactEnergy, 0.33),
       trajectory: trajectoryData,
       consequences,
-      nasaData: nasaObject,
+      nasaData: nasaDataClone,
       collisionProbability: trajectoryData.collisionProbability
     };
   }

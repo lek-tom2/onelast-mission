@@ -156,6 +156,12 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
                   key={scenario.id}
                   onClick={() => {
                     // Just open the details panel - user will select city there
+                    console.log('Selecting scenario:', {
+                      id: scenario.id,
+                      name: scenario.name,
+                      nasaId: scenario.nasaData?.id,
+                      nasaName: scenario.nasaData?.name
+                    });
                     selectAsteroidDetails(scenario);
                   }}
                   className={`p-3 rounded cursor-pointer transition-all ${

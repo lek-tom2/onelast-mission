@@ -50,6 +50,9 @@ class NASADataManager {
         allAsteroids.push(...asteroids);
       });
 
+      console.log('Raw NASA asteroids count:', allAsteroids.length);
+      console.log('Sample asteroid data:', allAsteroids[0]);
+
       // Filter for interesting asteroids with better criteria
       const interestingAsteroids = allAsteroids.filter(asteroid => {
         const approachData = asteroid.close_approach_data[0];
@@ -110,6 +113,12 @@ class NASADataManager {
       topAsteroids.forEach((asteroid, index) => {
         const city = majorCities[index % majorCities.length];
         const scenario = trajectoryCalculator.convertToImpactScenario(asteroid, city);
+        console.log(`Creating scenario ${index}:`, {
+          id: scenario.id,
+          name: scenario.name,
+          nasaId: scenario.nasaData?.id,
+          nasaName: scenario.nasaData?.name
+        });
         impactScenarios.push(scenario);
       });
 
