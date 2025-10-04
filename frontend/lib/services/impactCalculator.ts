@@ -23,7 +23,8 @@ export function recalculateImpactForCity(
 
   // Recalculate trajectory and consequences for the new city
   const newScenario = trajectoryCalculator.convertToImpactScenario(
-    originalScenario.nasaData,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    originalScenario.nasaData as any,
     targetCity
   );
 

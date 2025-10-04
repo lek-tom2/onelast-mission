@@ -13,16 +13,17 @@ export function useNEOData() {
   const fetchNEOData = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       console.log('Loading NEO data from feed...');
-      
+
       const allNEOs: NEOObject[] = [];
-      
+
       // Process all NEO objects from feed.json
       Object.entries(feedData.near_earth_objects).forEach(([date, neos]) => {
         console.log(`Processing ${neos.length} NEOs for date ${date}`);
-        
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         neos.forEach((neo: any) => {
           // Create simplified orbital data from the feed data
           // Since feed doesn't have full orbital elements, we'll use approximations
@@ -55,22 +56,22 @@ export function useNEOData() {
               orbit_class_range: 'a < 1.3 AU'
             }
           };
-          
+
           const convertedNEO = convertNASADataToNEO(neo.name, simplifiedOrbitalData);
           // Override hazardous status from feed data
           convertedNEO.hazardous = neo.is_potentially_hazardous_asteroid;
           allNEOs.push(convertedNEO);
         });
       });
-      
+
       // Also add the detailed single NEO object
       const detailedNEO = convertNASADataToNEO(singleNeoData.name, singleNeoData.orbital_data);
       allNEOs.push(detailedNEO);
-      
+
       setNeoObjects(allNEOs);
       setLastUpdated(new Date());
       console.log(`Successfully loaded ${allNEOs.length} NEO objects`);
-      
+
     } catch (err) {
       console.error('Failed to load NEO data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load NEO data');

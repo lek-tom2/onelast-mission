@@ -245,6 +245,7 @@ class NASAApiService {
         console.log('📈 Element count:', feedData.element_count);
         console.log('📅 Date keys:', Object.keys(feedData.near_earth_objects || {}));
         console.log('🪨 Sample asteroids:', feedData.near_earth_objects ? Object.keys(feedData.near_earth_objects).map(date =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           `${date}: ${(feedData.near_earth_objects as any)[date].length} asteroids`
         ) : 'No asteroids');
 
@@ -341,7 +342,9 @@ class NASAApiService {
 
         // Search through all dates in the feed data
         for (const date of Object.keys(feedData.near_earth_objects)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const asteroids = (feedData.near_earth_objects as any)[date];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const asteroid = asteroids.find((ast: any) => ast.id === asteroidId);
           if (asteroid) {
             foundAsteroid = asteroid;
@@ -353,6 +356,7 @@ class NASAApiService {
           // Get orbital data for this asteroid if available
           const orbitalInfo = (orbitalData as OrbitalDataResponse)[foundAsteroid.name];
           if (orbitalInfo) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (foundAsteroid as any).orbital_data = orbitalInfo;
           }
 

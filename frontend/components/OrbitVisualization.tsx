@@ -15,7 +15,6 @@ interface OrbitVisualizationProps {
 export default function OrbitVisualization({ asteroid, gameMode, onFocusEarth, onFocusAsteroid }: OrbitVisualizationProps) {
     const orbitRef = useRef<THREE.Group>(null);
     const asteroidRef = useRef<THREE.Mesh>(null);
-    const orbitLineRef = useRef<THREE.Line>(null);
     const { camera } = useThree();
     const [orbitProgress, setOrbitProgress] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -187,9 +186,7 @@ export default function OrbitVisualization({ asteroid, gameMode, onFocusEarth, o
     return (
         <group ref={orbitRef}>
             {/* Orbit Path */}
-            <line ref={orbitLineRef} geometry={orbitGeometry}>
-                <lineBasicMaterial color="#00ff00" linewidth={2} />
-            </line>
+            <primitive object={new THREE.Line(orbitGeometry, new THREE.LineBasicMaterial({ color: "#00ff00", linewidth: 2 }))} />
 
             {/* Earth */}
             <mesh position={[0, 0, 0]}>

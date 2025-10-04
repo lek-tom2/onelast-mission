@@ -349,24 +349,22 @@ export default function SpaceScene() {
   };
 
   return (
-    <div className="w-full h-screen bg-black flex">
+    <div className="w-full h-screen bg-black">
       {/* 3D Scene - Full Screen */}
-      <div className="flex-1">
-        <Canvas
-          camera={{ position: [0, 0, 5], fov: 75 }}
-          gl={{ antialias: true, alpha: true }}
-        >
-          <Suspense fallback={null}>
-            <SceneContent
-              launchingAsteroid={launchingAsteroid}
-              setLaunchingAsteroid={setLaunchingAsteroid}
-              setLaunchHandler={setLaunchHandler}
-            />
-          </Suspense>
-        </Canvas>
-      </div>
+      <Canvas
+        camera={{ position: [0, 0, 5], fov: 75 }}
+        gl={{ antialias: true, alpha: true }}
+      >
+        <Suspense fallback={null}>
+          <SceneContent
+            launchingAsteroid={launchingAsteroid}
+            setLaunchingAsteroid={setLaunchingAsteroid}
+            setLaunchHandler={setLaunchHandler}
+          />
+        </Suspense>
+      </Canvas>
 
-      {/* UI Overlay */}
+      {/* Asteroid List Sidebar - Left Side (like Solar System view) */}
       <ScenarioPanel
         scenarios={loading ? [] : realScenarios}
         onScenarioSelect={(scenario) => {

@@ -236,33 +236,33 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
       {/* Orbital Data Section */}
       {(() => {
         // Extract orbital data from NASA data if available
-        const orbitalData = displayScenario.nasaData?.orbital_data ? {
-          orbit_id: displayScenario.nasaData.orbital_data.orbit_id,
-          orbit_determination_date: displayScenario.nasaData.orbital_data.orbit_determination_date,
-          first_observation_date: displayScenario.nasaData.orbital_data.first_observation_date,
-          last_observation_date: displayScenario.nasaData.orbital_data.last_observation_date,
-          data_arc_in_days: displayScenario.nasaData.orbital_data.data_arc_in_days,
-          observations_used: displayScenario.nasaData.orbital_data.observations_used,
-          orbit_uncertainty: displayScenario.nasaData.orbital_data.orbit_uncertainty,
-          minimum_orbit_intersection: displayScenario.nasaData.orbital_data.minimum_orbit_intersection,
-          jupiter_tisserand_invariant: displayScenario.nasaData.orbital_data.jupiter_tisserand_invariant,
-          epoch_osculation: displayScenario.nasaData.orbital_data.epoch_osculation,
-          eccentricity: displayScenario.nasaData.orbital_data.eccentricity,
-          semi_major_axis: displayScenario.nasaData.orbital_data.semi_major_axis,
-          inclination: displayScenario.nasaData.orbital_data.inclination,
-          ascending_node_longitude: displayScenario.nasaData.orbital_data.ascending_node_longitude,
-          orbital_period: displayScenario.nasaData.orbital_data.orbital_period,
-          perihelion_distance: displayScenario.nasaData.orbital_data.perihelion_distance,
-          perihelion_argument: displayScenario.nasaData.orbital_data.perihelion_argument,
-          aphelion_distance: displayScenario.nasaData.orbital_data.aphelion_distance,
-          perihelion_time: displayScenario.nasaData.orbital_data.perihelion_time,
-          mean_anomaly: displayScenario.nasaData.orbital_data.mean_anomaly,
-          mean_motion: displayScenario.nasaData.orbital_data.mean_motion,
-          equinox: displayScenario.nasaData.orbital_data.equinox,
+        const orbitalData = displayScenario.orbitalData ? {
+          orbit_id: displayScenario.orbitalData.orbit_id,
+          orbit_determination_date: displayScenario.orbitalData.orbit_determination_date,
+          first_observation_date: displayScenario.orbitalData.first_observation_date,
+          last_observation_date: displayScenario.orbitalData.last_observation_date,
+          data_arc_in_days: displayScenario.orbitalData.data_arc_in_days,
+          observations_used: displayScenario.orbitalData.observations_used,
+          orbit_uncertainty: displayScenario.orbitalData.orbit_uncertainty,
+          minimum_orbit_intersection: displayScenario.orbitalData.minimum_orbit_intersection,
+          jupiter_tisserand_invariant: displayScenario.orbitalData.jupiter_tisserand_invariant,
+          epoch_osculation: displayScenario.orbitalData.epoch_osculation,
+          eccentricity: displayScenario.orbitalData.eccentricity,
+          semi_major_axis: displayScenario.orbitalData.semi_major_axis,
+          inclination: displayScenario.orbitalData.inclination,
+          ascending_node_longitude: displayScenario.orbitalData.ascending_node_longitude,
+          orbital_period: displayScenario.orbitalData.orbital_period,
+          perihelion_distance: displayScenario.orbitalData.perihelion_distance,
+          perihelion_argument: displayScenario.orbitalData.perihelion_argument,
+          aphelion_distance: displayScenario.orbitalData.aphelion_distance,
+          perihelion_time: displayScenario.orbitalData.perihelion_time,
+          mean_anomaly: displayScenario.orbitalData.mean_anomaly,
+          mean_motion: displayScenario.orbitalData.mean_motion,
+          equinox: displayScenario.orbitalData.equinox,
           orbit_class: {
-            orbit_class_type: displayScenario.nasaData.orbital_data.orbit_class.orbit_class_type,
-            orbit_class_description: displayScenario.nasaData.orbital_data.orbit_class.orbit_class_description,
-            orbit_class_range: displayScenario.nasaData.orbital_data.orbit_class.orbit_class_range
+            orbit_class_type: displayScenario.orbitalData.orbit_class.orbit_class_type,
+            orbit_class_description: displayScenario.orbitalData.orbit_class.orbit_class_description,
+            orbit_class_range: displayScenario.orbitalData.orbit_class.orbit_class_range
           }
         } : displayScenario.orbitalData;
 
@@ -467,19 +467,6 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
         </div>
       )}
 
-      {/* NASA JPL Database Link */}
-      {displayScenario.nasaData?.nasa_jpl_url && (
-        <div className="mt-4 pt-4 border-t border-gray-700">
-          <a
-            href={displayScenario.nasaData.nasa_jpl_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-300 underline text-sm flex items-center"
-          >
-            🔗 View on NASA JPL Small-Body Database →
-          </a>
-        </div>
-      )}
     </div>
   );
 }

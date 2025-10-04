@@ -15,49 +15,50 @@ function auToKm(au: number) {
 }
 
 // Function to validate NEO positions against close approach data
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateNEOPositions(neoObjects: any[], julianDate: number) {
   console.log(`🔍 Validating NEO positions for Julian Date: ${julianDate}`);
-  
+
   // Calculate Earth's position
   const earthPosition = calculateKeplerianPosition(PLANETARY_ELEMENTS.earth, julianDate);
   console.log(`🌍 Earth position: x=${earthPosition.x.toFixed(3)}, y=${earthPosition.y.toFixed(3)}, z=${earthPosition.z.toFixed(3)}`);
-  
+
   const currentDate = new Date((julianDate - 2440587.5) * 86400000);
   const currentDateStr = currentDate.toISOString().split('T')[0];
-  
+
   console.log(`📅 Current simulation date: ${currentDateStr}`);
-  
+
   neoObjects.forEach((neo, index) => {
     if (index > 5) return; // Limit to first 5 NEOs for debugging
-    
+
     // Calculate NEO position
     const neoPosition = calculateKeplerianPosition(neo.orbitalElements, julianDate);
-    
+
     // Calculate distance to Earth in our simulation
     const simulationDistance = calculateDistance(neoPosition, earthPosition);
     const simulationDistanceKm = auToKm(simulationDistance);
-    
+
     console.log(`\n☄️ NEO: ${neo.name}`);
     console.log(`   Position: x=${neoPosition.x.toFixed(3)}, y=${neoPosition.y.toFixed(3)}, z=${neoPosition.z.toFixed(3)}`);
-    console.log(`   Distance to Earth (simulation): ${simulationDistance.toFixed(4)} AU (${(simulationDistanceKm/1000000).toFixed(2)} million km)`);
-    
+    console.log(`   Distance to Earth (simulation): ${simulationDistance.toFixed(4)} AU (${(simulationDistanceKm / 1000000).toFixed(2)} million km)`);
+
     // Check close approach data
     if (neo.closestApproach) {
       const approachDate = neo.closestApproach.date;
       const approachDistanceKm = parseFloat(neo.closestApproach.distance) * 149597870.7; // Convert AU to km
-      
+
       console.log(`   Close approach date: ${approachDate}`);
-      console.log(`   Expected close distance: ${neo.closestApproach.distance} AU (${(approachDistanceKm/1000000).toFixed(2)} million km)`);
-      
+      console.log(`   Expected close distance: ${neo.closestApproach.distance} AU (${(approachDistanceKm / 1000000).toFixed(2)} million km)`);
+
       // Check if current date matches approach date
       if (approachDate === currentDateStr) {
         const distanceDifference = Math.abs(simulationDistanceKm - approachDistanceKm);
         const relativeError = (distanceDifference / approachDistanceKm) * 100;
-        
+
         console.log(`   ⚠️ CLOSE APPROACH TODAY!`);
-        console.log(`   Distance difference: ${(distanceDifference/1000000).toFixed(2)} million km`);
+        console.log(`   Distance difference: ${(distanceDifference / 1000000).toFixed(2)} million km`);
         console.log(`   Relative error: ${relativeError.toFixed(1)}%`);
-        
+
         if (relativeError > 50) {
           console.log(`   🔴 HIGH ERROR - Position may be incorrect!`);
         } else if (relativeError > 20) {

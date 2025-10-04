@@ -105,6 +105,7 @@ export function convertNASADataToNEO(name: string, orbitalData: NEOOrbitalData):
       // Store additional data for proper calculations
       epoch: epoch,
       meanMotion: meanMotion
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
     hazardous: isHazardous,
     closestApproach: {

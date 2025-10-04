@@ -1,4 +1,5 @@
 import { NASAObject } from './nasaApi';
+import { ImpactScenario } from '../types/asteroid';
 import * as THREE from 'three';
 
 export interface TrajectoryData {

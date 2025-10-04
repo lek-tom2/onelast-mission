@@ -29,27 +29,28 @@ const getTextureMap = (planetKey: keyof typeof PLANETARY_ELEMENTS): string => {
 export default function Planet({ planetKey, julianDate, onDoubleClick }: PlanetProps) {
   const planetRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
-  
+
   const elements = PLANETARY_ELEMENTS[planetKey];
-  
+
   // Load planet texture
   const texture = useLoader(THREE.TextureLoader, getTextureMap(planetKey));
-  
+
   // Calculate current position using Keplerian mechanics
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const position = calculateKeplerianPosition(elements as any, julianDate);
-  
+
   // Scale positions for better visualization (1 AU = 4 units)
   const scaledPosition = {
     x: position.x * 4,
     y: position.y * 4,
     z: position.z * 4
   };
-  
+
   useFrame(() => {
     if (planetRef.current) {
       planetRef.current.position.set(scaledPosition.x, scaledPosition.y, scaledPosition.z);
     }
-    
+
     if (meshRef.current) {
       // Planet rotation
       meshRef.current.rotation.y += 0.01;
@@ -64,33 +65,33 @@ export default function Planet({ planetKey, julianDate, onDoubleClick }: PlanetP
   return (
     <group ref={planetRef}>
       {/* Planet */}
-      <mesh 
+      <mesh
         ref={meshRef}
         onDoubleClick={handleDoubleClick}
         onPointerOver={() => document.body.style.cursor = 'pointer'}
         onPointerOut={() => document.body.style.cursor = 'default'}
       >
         <sphereGeometry args={[elements.size, 32, 32]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           map={texture}
           roughness={0.8}
           metalness={0.1}
         />
       </mesh>
-      
+
       {/* Saturn's rings */}
       {planetKey === 'saturn' && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <ringGeometry args={[elements.size * 1.2, elements.size * 2, 64]} />
-          <meshBasicMaterial 
+          <meshBasicMaterial
             color="#D4AF37"
-            transparent 
+            transparent
             opacity={0.7}
             side={THREE.DoubleSide}
           />
         </mesh>
       )}
-      
+
       {/* Planet label - always faces camera */}
       <Billboard
         follow={true}

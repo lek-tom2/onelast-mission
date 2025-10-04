@@ -7,6 +7,36 @@ import * as THREE from 'three';
 import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
 import { ImpactScenario } from '@/lib/types/asteroid';
 import { populationDensityService } from '@/lib/services/populationDensityService';
+// Simple impact consequences calculation
+const calculateImpactConsequences = (asteroid: ImpactScenario, lat: number, lng: number) => {
+    const energy = asteroid.energy; // megatons
+    const energyKiloton = energy * 1000;
+
+    // More realistic blast radius calculations based on nuclear weapon scaling
+    const immediateBlastRadius = 0.28 * Math.pow(energyKiloton, 1 / 3); // km
+    const thermalRadius = immediateBlastRadius * 2.5; // km
+    const seismicRadius = immediateBlastRadius * 15; // km
+
+    // Crater size (simplified)
+    const craterSize = immediateBlastRadius * 0.5; // km
+
+    // Check if it's a water impact (simplified)
+    const isWaterImpact = Math.abs(lat) < 30 && (lng > 120 || lng < -120);
+
+    return {
+        immediateBlastRadius: Math.round(immediateBlastRadius * 1000) / 1000,
+        thermalRadius: Math.round(thermalRadius * 1000) / 1000,
+        seismicRadius: Math.round(seismicRadius * 1000) / 1000,
+        craterSize: Math.round(craterSize * 1000) / 1000,
+        isWaterImpact
+    };
+};
+// Simple coordinate conversion
+const vector3ToLatLng = (vector: THREE.Vector3) => {
+    const lat = Math.asin(vector.y) * (180 / Math.PI);
+    const lng = Math.atan2(vector.z, vector.x) * (180 / Math.PI);
+    return { lat, lng };
+};
 
 interface EarthProps {
     onScenarioSelect?: (scenario: ImpactScenario) => void;
@@ -18,6 +48,8 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
     const { camera } = useThree();
     const [impactPosition, setImpactPosition] = useState<THREE.Vector3 | null>(null);
     const [localImpactPosition, setLocalImpactPosition] = useState<THREE.Vector3 | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [impactConsequences, setImpactConsequences] = useState<any>(null);
     const { selectedAsteroidDetails, showConsequences } = useAsteroidStore();
 
     // Determine if Earth should rotate (only when no asteroid is selected)
@@ -139,6 +171,7 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
         }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleEarthClick = (event: any) => {
         event.stopPropagation();
 
@@ -159,6 +192,10 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
             // Get population data for this location
             const populationData = populationDensityService.getPopulationData(coords.lat, coords.lng);
             console.log('Population data:', populationData);
+
+            // Calculate consequences based on selected asteroid and impact point
+            const consequences = calculateImpactConsequences(selectedAsteroidDetails, coords.lat, coords.lng);
+            setImpactConsequences({ ...consequences, populationImpact: populationData });
         }
     };
 
@@ -237,7 +274,20 @@ function ImpactVisualization({
 }: {
     position: THREE.Vector3;
     asteroid: ImpactScenario;
-    consequences: any;
+    consequences: {
+        immediateBlastRadius: number;
+        thermalRadius: number;
+        seismicRadius: number;
+        craterSize: number;
+        isWaterImpact: boolean;
+        populationImpact: {
+            totalAffected: number;
+            totalCasualties: number;
+            immediateBlast: { population: number; casualties: number; casualtyRate: number };
+            thermalRadiation: { population: number; casualties: number; casualtyRate: number };
+            seismicEffects: { population: number; casualties: number; casualtyRate: number };
+        };
+    };
     coordinates: { lat: number; lng: number };
 }) {
     const { immediateBlastRadius, thermalRadius, seismicRadius, craterSize, isWaterImpact, populationImpact } = consequences;
