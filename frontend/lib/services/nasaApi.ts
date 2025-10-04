@@ -516,7 +516,6 @@ class NASAApiService {
     // Get the current week
     const startDate = new Date(today);
     const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 

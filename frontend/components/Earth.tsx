@@ -1,6 +1,6 @@
 // components/solar-system/Earth.tsx
 'use client';
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture, Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -56,14 +56,14 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
     const shouldRotate = !selectedAsteroidDetails;
 
     // Clear impact visualization when asteroid selection changes
-    useMemo(() => {
+    useEffect(() => {
         setImpactPosition(null);
         setLocalImpactPosition(null);
         onImpactPointChange?.(null);
     }, [selectedAsteroidDetails, onImpactPointChange]);
 
     // Notify parent when impact point changes
-    useMemo(() => {
+    useEffect(() => {
         onImpactPointChange?.(localImpactPosition);
     }, [localImpactPosition, onImpactPointChange]);
 
