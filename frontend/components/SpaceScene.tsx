@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
@@ -8,6 +8,7 @@ import Earth from './Earth';
 import AsteroidField from './AsteroidField';
 import ScenarioPanel from './ScenarioPanel';
 import AsteroidDetailsPanel from './AsteroidDetailsPanel';
+import DatePicker from './DatePicker';
 import { nasaDataManager } from '@/lib/services/nasaDataManager';
 import * as THREE from 'three';
 
@@ -115,10 +116,14 @@ export default function SpaceScene() {
     const loadRealData = async () => {
       try {
         setLoading(true);
+        console.log('Loading NASA asteroid data...');
         const data = await nasaDataManager.getRealAsteroidData();
+        console.log('Loaded scenarios:', data.impactScenarios.length);
         setRealScenarios(data.impactScenarios);
       } catch (error) {
         console.error('Failed to load real asteroid data:', error);
+        // Set empty array on error to show fallback UI
+        setRealScenarios([]);
       } finally {
         setLoading(false);
       }
@@ -132,16 +137,34 @@ export default function SpaceScene() {
     console.log('Focusing on scenario:', scenario.name);
   };
 
+  const handleDateChange = async (startDate: string, endDate: string) => {
+    try {
+      setLoading(true);
+      console.log('Changing date range to:', startDate, 'to', endDate);
+      const data = await nasaDataManager.changeDateRange(startDate, endDate);
+      console.log('Loaded scenarios for new date:', data.impactScenarios.length);
+      setRealScenarios(data.impactScenarios);
+    } catch (error) {
+      console.error('Failed to load data for new date range:', error);
+      setRealScenarios([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="w-full h-screen bg-black">
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 75 }}
-        gl={{ antialias: true, alpha: true }}
-      >
-        <Suspense fallback={null}>
-          <SceneContent />
-        </Suspense>
-      </Canvas>
+    <div className="w-full h-screen bg-black flex">
+      {/* 3D Scene - Full Screen */}
+      <div className="flex-1">
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 75 }}
+          gl={{ antialias: true, alpha: true }}
+        >
+          <Suspense fallback={null}>
+            <SceneContent />
+          </Suspense>
+        </Canvas>
+      </div>
       
       {/* UI Overlay */}
       <ScenarioPanel 
@@ -150,11 +173,12 @@ export default function SpaceScene() {
           useAsteroidStore.getState().selectScenario(scenario);
         }}
         onFocus={focusOnScenario}
+        onDateChange={handleDateChange}
       />
       
       {/* Loading indicator */}
       {loading && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-sm rounded-lg p-4 text-white">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-sm rounded-lg p-4 text-white z-50">
           <div className="flex items-center space-x-3">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
             <span>Loading NASA asteroid data...</span>

@@ -63,18 +63,26 @@ export interface CloseApproachData {
 
 class NASAApiService {
   private baseUrl = 'https://api.nasa.gov/neo/rest/v1';
-  private apiKey = 'DEMO_KEY'; // In production, use a real API key
+  private apiKey = process.env.NEXT_PUBLIC_NASA_API_KEY || 'DEMO_KEY';
 
   async getNearEarthObjects(startDate: string, endDate: string): Promise<NASAAPIResponse> {
     try {
       const url = `${this.baseUrl}/feed?start_date=${startDate}&end_date=${endDate}&detailed=false&api_key=${this.apiKey}`;
+      console.log('Fetching NASA data from:', url);
+      console.log('Using API key:', this.apiKey === 'DEMO_KEY' ? 'DEMO_KEY (demo)' : 'Custom key');
+      
       const response = await fetch(url);
+      console.log('NASA API response status:', response.status);
       
       if (!response.ok) {
-        throw new Error(`NASA API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('NASA API error response:', errorText);
+        throw new Error(`NASA API error: ${response.status} - ${errorText}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('NASA API response received:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching NASA data:', error);
       throw error;
@@ -85,6 +93,7 @@ class NASAApiService {
     try {
       const url = `${this.baseUrl}/neo/${asteroidId}?api_key=${this.apiKey}`;
       const response = await fetch(url);
+      console.log('NASA API response:', response);
       
       if (!response.ok) {
         throw new Error(`NASA API error: ${response.status}`);
@@ -97,16 +106,45 @@ class NASAApiService {
     }
   }
 
+  // Test NASA API with a known working date
+  async testNASAAPI(): Promise<boolean> {
+    try {
+      // Use a known working date from the example data you provided
+      const testDate = '2015-09-08';
+      console.log('Testing NASA API with date:', testDate);
+      const response = await this.getNearEarthObjects(testDate, testDate);
+      console.log('NASA API test successful:', response.element_count, 'asteroids found');
+      return true;
+    } catch (error) {
+      console.error('NASA API test failed:', error);
+      return false;
+    }
+  }
+
+  // Get asteroids for custom date range
+  async getAsteroidsForDateRange(startDate: string, endDate: string): Promise<NASAAPIResponse> {
+    console.log('Requesting NASA data for custom date range:', startDate, 'to', endDate);
+    
+    try {
+      return await this.getNearEarthObjects(startDate, endDate);
+    } catch (error) {
+      console.log('Custom date range failed, trying single day...');
+      // Fallback to single day if range fails
+      return await this.getNearEarthObjects(startDate, startDate);
+    }
+  }
+
   // Get current week's asteroids
   async getCurrentWeekAsteroids(): Promise<NASAAPIResponse> {
     const today = new Date();
-    const startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // NASA API has a 7-day limit, so we'll get the current week
+    const startDate = new Date(today);
     const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
     
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
     
-    return this.getNearEarthObjects(startDateStr, endDateStr);
+    return this.getAsteroidsForDateRange(startDateStr, endDateStr);
   }
 }
 

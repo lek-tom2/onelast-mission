@@ -2,55 +2,70 @@
 import { useState } from 'react';
 import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
 import { ImpactScenario } from '@/lib/types/asteroid';
+import DatePicker from './DatePicker';
 
 interface ScenarioPanelProps {
   scenarios: ImpactScenario[];
   onScenarioSelect: (scenario: ImpactScenario) => void;
   onFocus?: (scenario: ImpactScenario) => void;
+  onDateChange?: (startDate: string, endDate: string) => void;
 }
 
-export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus }: ScenarioPanelProps) {
+export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, onDateChange }: ScenarioPanelProps) {
   const { selectedScenario, selectedAsteroidDetails, showTrajectories, showConsequences, toggleTrajectories, toggleConsequences, selectAsteroidDetails } = useAsteroidStore();
   const [isExpanded, setIsExpanded] = useState(true);
   const [showTrajectoryDetails, setShowTrajectoryDetails] = useState(false);
 
   return (
-    <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 text-white min-w-80 max-w-96">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Asteroid Impact Scenarios</h2>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-gray-400 hover:text-white transition-colors"
-        >
-          {isExpanded ? '−' : '+'}
-        </button>
+    <div className="h-full w-96 bg-black/90 backdrop-blur-sm text-white flex flex-col flex-shrink-0">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-700 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">Asteroid Impact Scenarios</h2>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            {isExpanded ? '−' : '+'}
+          </button>
+        </div>
+        
+        {/* Date Picker */}
+        {onDateChange && (
+          <div className="mb-4">
+            <DatePicker onDateChange={onDateChange} />
+          </div>
+        )}
+
+        {/* Controls */}
+        <div className="flex gap-2">
+          <button
+            onClick={toggleTrajectories}
+            className={`px-3 py-1 rounded text-sm transition-colors ${
+              showTrajectories 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-600 text-gray-300'
+            }`}
+          >
+            Trajectories
+          </button>
+          <button
+            onClick={toggleConsequences}
+            className={`px-3 py-1 rounded text-sm transition-colors ${
+              showConsequences 
+                ? 'bg-red-600 text-white' 
+                : 'bg-gray-600 text-gray-300'
+            }`}
+          >
+            Impact Zones
+          </button>
+        </div>
       </div>
 
+      {/* Scrollable Content */}
       {isExpanded && (
-        <div className="space-y-4">
-          {/* Controls */}
-          <div className="flex gap-2">
-            <button
-              onClick={toggleTrajectories}
-              className={`px-3 py-1 rounded text-sm transition-colors ${
-                showTrajectories 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-600 text-gray-300'
-              }`}
-            >
-              Trajectories
-            </button>
-            <button
-              onClick={toggleConsequences}
-              className={`px-3 py-1 rounded text-sm transition-colors ${
-                showConsequences 
-                  ? 'bg-red-600 text-white' 
-                  : 'bg-gray-600 text-gray-300'
-              }`}
-            >
-              Impact Zones
-            </button>
-          </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-4">
 
           {/* Scenario List */}
           <div className="space-y-2">
@@ -187,6 +202,7 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus }: 
               </div>
             </div>
           )}
+          </div>
         </div>
       )}
     </div>
