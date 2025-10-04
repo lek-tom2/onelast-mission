@@ -1,19 +1,19 @@
-# 🌍 3D Earth Asteroid Impact Simulator
+# 3D Earth Asteroid Impact Simulator
 
 A comprehensive 3D Earth model with real NASA asteroid data, scientific trajectory calculations, and detailed impact consequence modeling. Built with Next.js, React Three Fiber, and TypeScript.
 
-## ✨ Features
+## Features
 
-- 🌍 **Realistic 3D Earth** with high-quality textures and atmospheric effects
-- 🚀 **Real NASA Asteroid Data** from the Near Earth Object API
-- 📊 **Advanced Trajectory Calculations** with collision probability assessment
-- 💥 **Impact Consequence Modeling** including blast radius, thermal radiation, and seismic effects
-- 🎮 **Interactive 3D Controls** - zoom, pan, rotate around Earth
-- 📱 **Real-time UI** with asteroid details and threat assessment
-- 🔗 **NASA Database Integration** with direct links to official asteroid data
-- 📅 **Date Picker** to explore historical and future asteroid data
-- 🎯 **Collision Probability** calculations based on orbital mechanics
-- 🌐 **Global Impact Scenarios** across 20 major cities worldwide
+- **Realistic 3D Earth** with high-quality textures and atmospheric effects
+- **Real NASA Asteroid Data** from the Near Earth Object API
+- **Advanced Trajectory Calculations** with collision probability assessment
+- **Impact Consequence Modeling** including blast radius, thermal radiation, and seismic effects
+- **Interactive 3D Controls** - zoom, pan, rotate around Earth
+- **Real-time UI** with asteroid details and threat assessment
+- **NASA Database Integration** with direct links to official asteroid data
+- **Date Picker** to explore historical and future asteroid data
+- **Collision Probability** calculations based on orbital mechanics
+- **Global Impact Scenarios** across 20 major cities worldwide
 
 ## Getting Started
 
@@ -49,7 +49,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## 🎮 How to Use
+## How to Use
 
 ### **3D Navigation**
 1. **Rotate Earth**: Left-click and drag to rotate the view
@@ -75,7 +75,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - **Toggle Buttons**: Show/hide trajectories and impact zones
 - **Details Panel**: Comprehensive asteroid information and NASA data
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 ### **Frontend Stack**
 - **Next.js 15** - React framework with App Router
@@ -113,27 +113,216 @@ SpaceScene (Main Container)
     └── Impact Analysis
 ```
 
-## 🔬 Scientific Calculations
+## Scientific Calculations
 
 ### **Trajectory Calculations**
-- **Orbital Mechanics**: Based on gravitational effects and velocity
-- **Approach Angles**: Calculated from miss distance and velocity
-- **Collision Probability**: Factors in gravitational focusing and uncertainty
-- **Energy Calculations**: Kinetic energy based on mass and velocity
 
-### **Impact Modeling**
-- **Blast Radius**: `radius = energy^(1/3) * 2` (km)
-- **Thermal Radiation**: `radius = blast_radius * 2` (km)
-- **Seismic Effects**: `magnitude = 4 + log10(energy)`
-- **Casualties**: Based on population density and impact energy
+The trajectory calculation system uses orbital mechanics to determine asteroid paths and collision probabilities.
 
-### **Data Processing**
-- **Asteroid Filtering**: Size, velocity, miss distance criteria
-- **City Distribution**: 20 major cities worldwide
-- **Threat Assessment**: Color-coded by collision probability
-- **Real-time Updates**: Cached data with 24-hour refresh
+#### **Orbital Mechanics Implementation**
+```typescript
+calculateTrajectory(nasaObject: NASAObject): TrajectoryData {
+  const approachData = nasaObject.close_approach_data[0];
+  const diameter = (nasaObject.estimated_diameter.meters.estimated_diameter_min + 
+                   nasaObject.estimated_diameter.meters.estimated_diameter_max) / 2;
+  
+  // Convert NASA data to our format
+  const velocity = parseFloat(approachData.relative_velocity.kilometers_per_second);
+  const missDistance = parseFloat(approachData.miss_distance.kilometers);
+  
+  // Calculate approach angle from miss distance and velocity
+  const approachAngle = Math.atan2(missDistance, velocity * 86400); // Convert km/s to km/day
+  
+  // Calculate time to potential impact
+  const timeToImpact = missDistance / velocity; // days
+  
+  // Calculate collision probability using gravitational focusing
+  const gravitationalFocusing = 1 + (2 * this.earthMass * this.gravitationalConstant) / 
+                               (missDistance * 1000 * Math.pow(velocity * 1000, 2));
+  const uncertaintyFactor = Math.min(1, diameter / 1000); // Larger asteroids are more predictable
+  const collisionProbability = Math.min(0.1, gravitationalFocusing * uncertaintyFactor * 0.1);
+  
+  // Calculate impact energy
+  const mass = this.calculateMass(diameter);
+  const kineticEnergy = 0.5 * mass * Math.pow(velocity * 1000, 2); // Joules
+  const impactEnergy = kineticEnergy / (4.184e15); // Convert to megatons TNT
+  
+  return {
+    points: this.generateTrajectoryPoints(approachAngle, missDistance, velocity),
+    approachAngle,
+    velocity,
+    timeToImpact,
+    closestApproach: missDistance,
+    collisionProbability,
+    impactEnergy
+  };
+}
+```
 
-## 📊 Data Sources
+#### **Mass Calculation**
+```typescript
+private calculateMass(diameter: number): number {
+  // Assume average asteroid density of 2.6 g/cm³ (typical for stony asteroids)
+  const density = 2600; // kg/m³
+  const radius = diameter / 2; // meters
+  const volume = (4/3) * Math.PI * Math.pow(radius, 3); // m³
+  return volume * density; // kg
+}
+```
+
+#### **Trajectory Point Generation**
+```typescript
+private generateTrajectoryPoints(approachAngle: number, missDistance: number, velocity: number): THREE.Vector3[] {
+  const points: THREE.Vector3[] = [];
+  const earthRadius = 6371; // km
+  const trajectoryLength = missDistance * 2; // km
+  
+  // Generate points along the trajectory
+  for (let i = 0; i <= 50; i++) {
+    const t = i / 50;
+    const distance = earthRadius + trajectoryLength * t;
+    
+    // Calculate position based on approach angle
+    const x = distance * Math.cos(approachAngle);
+    const y = distance * Math.sin(approachAngle);
+    const z = Math.sin(t * Math.PI) * 1000; // Add some vertical variation
+    
+    points.push(new THREE.Vector3(x / 1000, y / 1000, z / 1000)); // Convert to scene units
+  }
+  
+  return points;
+}
+```
+
+### **Impact Consequence Modeling**
+
+The impact modeling system calculates realistic consequences based on asteroid properties and impact energy.
+
+#### **Blast Radius Calculations**
+```typescript
+calculateImpactConsequences(trajectoryData: TrajectoryData, nasaObject: NASAObject): ImpactConsequences {
+  const energy = trajectoryData.impactEnergy; // megatons TNT
+  const diameter = (nasaObject.estimated_diameter.meters.estimated_diameter_min + 
+                   nasaObject.estimated_diameter.meters.estimated_diameter_max) / 2;
+  
+  // Immediate blast radius - complete destruction zone
+  // Based on nuclear weapon scaling laws: R = k * E^(1/3)
+  const immediateBlastRadius = Math.pow(energy, 1/3) * 2; // km
+  
+  // Thermal radiation radius - fire and heat damage
+  // Thermal effects extend roughly 2x the blast radius
+  const thermalRadius = immediateBlastRadius * 2; // km
+  
+  // Seismic effects radius - earthquake damage
+  // Seismic effects can extend 4x the blast radius
+  const seismicRadius = immediateBlastRadius * 4; // km
+  
+  // Calculate earthquake magnitude using Richter scale
+  // M = 4 + log10(E) where E is energy in megatons
+  const seismicMagnitude = Math.min(10, 4 + Math.log10(energy));
+  
+  // Casualty estimation based on energy and population density
+  // Simplified model: casualties = min(50M, energy * 10,000)
+  const immediateBlastFatalities = Math.min(50000000, energy * 10000);
+  const thermalFatalities = Math.min(100000000, energy * 5000);
+  
+  return {
+    immediateBlast: {
+      radius: immediateBlastRadius,
+      fatalities: immediateBlastFatalities
+    },
+    thermalRadiation: {
+      radius: thermalRadius,
+      fatalities: thermalFatalities
+    },
+    seismicEffects: {
+      magnitude: seismicMagnitude,
+      radius: seismicRadius
+    },
+    tsunami: this.calculateTsunamiEffects(energy, diameter),
+    atmosphericEffects: this.calculateAtmosphericEffects(energy)
+  };
+}
+```
+
+#### **Tsunami Calculation**
+```typescript
+private calculateTsunamiEffects(energy: number, diameter: number): TsunamiEffects | null {
+  // Only calculate tsunami if impact is in water (simplified: 70% chance)
+  if (Math.random() > 0.3) {
+    // Tsunami height based on impact energy
+    // H = 0.5 * E^(1/3) * (D/1000)^(1/2) where D is diameter in meters
+    const tsunamiHeight = 0.5 * Math.pow(energy, 1/3) * Math.pow(diameter / 1000, 1/2);
+    
+    // Affected coastlines based on energy
+    const affectedCoastlines = energy > 1000 ? 
+      ['North America', 'Europe', 'Asia', 'Africa'] :
+      energy > 100 ? 
+      ['North America', 'Europe'] :
+      ['Local region'];
+    
+    return {
+      height: tsunamiHeight,
+      affectedCoastlines
+    };
+  }
+  return null;
+}
+```
+
+#### **Atmospheric Effects Calculation**
+```typescript
+private calculateAtmosphericEffects(energy: number): AtmosphericEffects {
+  // Dust cloud formation threshold
+  const dustCloud = energy > 100; // megatons
+  
+  // Climate change threshold
+  const climateChange = energy > 1000; // megatons
+  
+  // Nuclear winter threshold
+  const nuclearWinter = energy > 10000; // megatons
+  
+  return {
+    dustCloud,
+    climateChange,
+    nuclearWinter
+  };
+}
+```
+
+### **Collision Probability Assessment**
+
+The collision probability calculation uses gravitational focusing and uncertainty factors.
+
+#### **Gravitational Focusing Formula**
+```typescript
+const gravitationalFocusing = 1 + (2 * earthMass * gravitationalConstant) / 
+                             (missDistance * velocity²);
+
+// Where:
+// earthMass = 5.972e24 kg (Earth's mass)
+// gravitationalConstant = 6.674e-11 m³/kg/s²
+// missDistance = closest approach distance in meters
+// velocity = relative velocity in m/s
+```
+
+#### **Uncertainty Factor**
+```typescript
+const uncertaintyFactor = Math.min(1, diameter / 1000);
+
+// Larger asteroids are more predictable and easier to track
+// Smaller asteroids have higher uncertainty in their orbits
+```
+
+#### **Final Probability Calculation**
+```typescript
+const collisionProbability = Math.min(0.1, gravitationalFocusing * uncertaintyFactor * 0.1);
+
+// Cap at 10% to maintain realism
+// Most real asteroid impacts have probabilities < 1%
+```
+
+## Data Sources
 
 - **NASA NEO API**: [https://api.nasa.gov/](https://api.nasa.gov/)
 - **Real-time Data**: Current and historical asteroid information
@@ -141,7 +330,7 @@ SpaceScene (Main Container)
 - **Orbital Mechanics**: Trajectory and collision probability
 - **Population Data**: City-specific impact scenarios
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 frontend/
@@ -169,7 +358,7 @@ frontend/
     └── textures/             # Earth texture assets
 ```
 
-## 🔧 API Integration
+## API Integration
 
 ### **NASA NEO API**
 ```typescript
@@ -200,7 +389,7 @@ const {
 } = useAsteroidStore();
 ```
 
-## 🎨 3D Rendering Pipeline
+## 3D Rendering Pipeline
 
 ### **Earth Model**
 - **High-resolution textures** for realistic appearance
@@ -220,7 +409,7 @@ const {
 - **Pulsing markers** for city impact points
 - **Particle effects** for atmospheric entry
 
-## 🧮 Mathematical Models
+## Mathematical Models
 
 ### **Collision Probability**
 ```typescript
@@ -241,7 +430,7 @@ const thermalRadius = blastRadius * 2;
 const seismicRadius = blastRadius * 4;
 ```
 
-## 🚀 Performance Optimizations
+## Performance Optimizations
 
 - **Memoization**: Expensive calculations cached with `useMemo`
 - **Lazy Loading**: Components loaded on demand
@@ -249,7 +438,7 @@ const seismicRadius = blastRadius * 4;
 - **Data Caching**: 24-hour cache for NASA API responses
 - **Optimized Meshes**: Efficient 3D geometry for smooth rendering
 
-## 🔄 How Everything Works
+## How Everything Works
 
 ### **1. Application Initialization**
 ```
@@ -462,7 +651,7 @@ private getFallbackData(): RealAsteroidData {
 }
 ```
 
-## 🎯 Key Features Explained
+## Key Features Explained
 
 ### **Collision Probability Calculation**
 The app calculates realistic collision probabilities based on:
