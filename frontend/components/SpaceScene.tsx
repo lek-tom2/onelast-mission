@@ -9,6 +9,7 @@ import AsteroidField from './AsteroidField';
 import ScenarioPanel from './ScenarioPanel';
 import AsteroidDetailsPanel from './AsteroidDetailsPanel';
 import DatePicker from './DatePicker';
+import CitySelector from './CitySelector';
 import { nasaDataManager } from '@/lib/services/nasaDataManager';
 import * as THREE from 'three';
 import { useRef, useMemo } from 'react';
@@ -393,6 +394,67 @@ export default function SpaceScene() {
     setHasImpactPoint(!!(selectedAsteroidDetails && showConsequences));
   }, [selectedAsteroidDetails, showConsequences]);
 
+  // Camera movement event listener
+  useEffect(() => {
+    const handleCameraMove = (event: CustomEvent) => {
+      const { city } = event.detail;
+      console.log('Moving camera to city:', city);
+
+      // Convert lat/lng to 3D position
+      const latRad = (city.lat * Math.PI) / 180;
+      const lngRad = (city.lng * Math.PI) / 180;
+      const cityPosition = new THREE.Vector3(
+        Math.cos(latRad) * Math.cos(lngRad),
+        Math.sin(latRad),
+        Math.cos(latRad) * Math.sin(lngRad)
+      );
+
+      // Get camera from the canvas
+      const canvas = document.querySelector('canvas');
+      if (canvas) {
+        const r3f = (canvas as { __r3f?: { camera?: THREE.Camera } }).__r3f;
+        if (r3f && r3f.camera) {
+          const camera = r3f.camera;
+
+          // Animate camera to city position
+          const startPosition = camera.position.clone();
+          const endPosition = cityPosition.clone().multiplyScalar(2.5); // Distance from Earth
+
+          const duration = 2000; // 2 seconds
+          const startTime = Date.now();
+
+          const animateCamera = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Smooth easing function
+            const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            const easedProgress = easeInOutCubic(progress);
+
+            // Interpolate position
+            camera.position.lerpVectors(startPosition, endPosition, easedProgress);
+
+            // Look at the city
+            camera.lookAt(cityPosition);
+            camera.updateMatrixWorld();
+
+            if (progress < 1) {
+              requestAnimationFrame(animateCamera);
+            }
+          };
+
+          animateCamera();
+        }
+      }
+    };
+
+    window.addEventListener('moveCameraToCity', handleCameraMove as EventListener);
+
+    return () => {
+      window.removeEventListener('moveCameraToCity', handleCameraMove as EventListener);
+    };
+  }, []);
+
   const focusOnScenario = (scenario: ImpactScenario) => {
     // This will be handled by the camera controller
     console.log('Focusing on scenario:', scenario.name);
@@ -438,6 +500,7 @@ export default function SpaceScene() {
         onFocus={focusOnScenario}
         onDateChange={handleDateChange}
       />
+
 
       {/* Loading indicator */}
       {loading && (

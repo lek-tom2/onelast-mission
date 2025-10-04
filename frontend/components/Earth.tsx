@@ -38,6 +38,27 @@ const vector3ToLatLng = (vector: THREE.Vector3) => {
     return { lat, lng };
 };
 
+// Convert lat/lng coordinates to 3D vector
+const latLngToVector3 = (lat: number, lng: number, radius: number = 1.02): THREE.Vector3 => {
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lng + 180) * (Math.PI / 180);
+
+    return new THREE.Vector3(
+        -radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+    );
+};
+
+interface City {
+    name: string;
+    lat: number;
+    lng: number;
+    country: string;
+    region: string;
+    density: number;
+}
+
 interface EarthProps {
     onScenarioSelect?: (scenario: ImpactScenario) => void;
     onImpactPointChange?: (point: THREE.Vector3 | null) => void;
@@ -50,7 +71,7 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
     const [localImpactPosition, setLocalImpactPosition] = useState<THREE.Vector3 | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [impactConsequences, setImpactConsequences] = useState<any>(null);
-    const { selectedAsteroidDetails, showConsequences } = useAsteroidStore();
+    const { selectedAsteroidDetails, showConsequences, selectedCity } = useAsteroidStore();
 
     // Determine if Earth should rotate (only when no asteroid is selected)
     const shouldRotate = !selectedAsteroidDetails;
@@ -66,6 +87,7 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
     useEffect(() => {
         onImpactPointChange?.(localImpactPosition);
     }, [localImpactPosition, onImpactPointChange]);
+
 
     // Load Earth textures with fallback
     const [earthTexture, bumpMap] = useTexture([
@@ -97,17 +119,6 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
         });
     }, [earthTexture, bumpMap]);
 
-    // Convert lat/lng coordinates to 3D vector
-    const latLngToVector3 = (lat: number, lng: number, radius: number = 1.02): THREE.Vector3 => {
-        const phi = (90 - lat) * (Math.PI / 180);
-        const theta = (lng + 180) * (Math.PI / 180);
-
-        return new THREE.Vector3(
-            -radius * Math.sin(phi) * Math.cos(theta),
-            radius * Math.cos(phi),
-            radius * Math.sin(phi) * Math.sin(theta)
-        );
-    };
 
     // Convert 3D vector to lat/lng coordinates
     const vector3ToLatLng = (vector: THREE.Vector3): { lat: number; lng: number } => {
@@ -275,6 +286,13 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
                     />
                 );
             })()}
+
+            {/* City Pin - Shows selected city */}
+            {selectedCity && (
+                <CityPin
+                    city={selectedCity}
+                />
+            )}
         </group>
     );
 }
@@ -501,6 +519,49 @@ function ImpactVisualization({
                     </Text>
                 </>
             )}
+        </group>
+    );
+}
+
+// City Pin Component
+function CityPin({ city }: { city: City }) {
+    const cityPosition = latLngToVector3(city.lat, city.lng);
+
+    return (
+        <group position={cityPosition}>
+            {/* Pin Base */}
+            <mesh>
+                <cylinderGeometry args={[0.01, 0.01, 0.05, 8]} />
+                <meshBasicMaterial color="#ff4444" />
+            </mesh>
+
+            {/* Pin Head */}
+            <mesh position={[0, 0.03, 0]}>
+                <sphereGeometry args={[0.015, 8, 8]} />
+                <meshBasicMaterial color="#ff0000" />
+            </mesh>
+
+            {/* Pin Label */}
+            <Text
+                position={[0.05, 0.05, 0]}
+                fontSize={0.03}
+                color="#ffffff"
+                anchorX="left"
+                anchorY="middle"
+            >
+                📍 {city.name}
+            </Text>
+
+            {/* City Info */}
+            <Text
+                position={[0.05, 0.02, 0]}
+                fontSize={0.02}
+                color="#cccccc"
+                anchorX="left"
+                anchorY="middle"
+            >
+                {city.country} • {city.density.toLocaleString()}/km²
+            </Text>
         </group>
     );
 }

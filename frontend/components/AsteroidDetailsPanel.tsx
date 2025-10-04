@@ -4,6 +4,7 @@ import { ImpactScenario } from '@/lib/types/asteroid';
 import CitySelector from './CitySelector';
 import { recalculateImpactForCity } from '@/lib/services/impactCalculator';
 import { populationDensityService } from '@/lib/services/populationDensityService';
+import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
 
 interface AsteroidDetailsPanelProps {
   scenario: ImpactScenario | null;
@@ -13,9 +14,26 @@ interface AsteroidDetailsPanelProps {
 }
 
 export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasImpactPoint = false }: AsteroidDetailsPanelProps) {
-  const [selectedCity, setSelectedCity] = useState<{ lat: number; lng: number; name: string } | null>(null);
+  const [selectedCity, setSelectedCity] = useState<{
+    name: string;
+    lat: number;
+    lng: number;
+    country: string;
+    region: string;
+    density: number;
+  } | null>(null);
   const [calculatedScenario, setCalculatedScenario] = useState<ImpactScenario | null>(null);
   const [isLaunching, setIsLaunching] = useState(false);
+  const { setSelectedCity: setStoreSelectedCity } = useAsteroidStore();
+
+  // Camera movement function - dispatch event to parent
+  const moveCameraToCity = (city: { lat: number; lng: number; name: string }) => {
+    // Dispatch custom event to parent component
+    const event = new CustomEvent('moveCameraToCity', {
+      detail: { city }
+    });
+    window.dispatchEvent(event);
+  };
 
   if (!scenario) return null;
 
@@ -111,9 +129,12 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
             selectedCity={selectedCity}
             onCitySelect={(city) => {
               setSelectedCity(city);
+              setStoreSelectedCity(city); // Update store for city pin
               if (city) {
                 const recalculated = recalculateImpactForCity(scenario, city);
                 setCalculatedScenario(recalculated);
+                // Move camera to selected city
+                moveCameraToCity(city);
               } else {
                 setCalculatedScenario(null);
               }

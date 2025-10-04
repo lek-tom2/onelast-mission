@@ -1,123 +1,141 @@
 'use client';
-import React, { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { populationDensityService } from '@/lib/services/populationDensityService';
 
 interface City {
+  name: string;
   lat: number;
   lng: number;
-  name: string;
   country: string;
+  region: string;
+  density: number;
 }
 
 interface CitySelectorProps {
-  selectedCity: { lat: number; lng: number; name: string } | null;
-  onCitySelect: (city: { lat: number; lng: number; name: string } | null) => void;
+  onCitySelect: (city: City) => void;
+  selectedCity?: City | null;
 }
 
-const majorCities: City[] = [
-  { lat: 40.7128, lng: -74.0060, name: 'New York City', country: 'USA' },
-  { lat: 35.6762, lng: 139.6503, name: 'Tokyo', country: 'Japan' },
-  { lat: 51.5074, lng: -0.1278, name: 'London', country: 'UK' },
-  { lat: -33.8688, lng: 151.2093, name: 'Sydney', country: 'Australia' },
-  { lat: 53.4285, lng: 14.5528, name: 'Szczecin', country: 'Poland' },
-  { lat: 48.8566, lng: 2.3522, name: 'Paris', country: 'France' },
-  { lat: 52.5200, lng: 13.4050, name: 'Berlin', country: 'Germany' },
-  { lat: 55.7558, lng: 37.6176, name: 'Moscow', country: 'Russia' },
-  { lat: 39.9042, lng: 116.4074, name: 'Beijing', country: 'China' },
-  { lat: 19.0760, lng: 72.8777, name: 'Mumbai', country: 'India' },
-  { lat: -22.9068, lng: -43.1729, name: 'Rio de Janeiro', country: 'Brazil' },
-  { lat: 41.8781, lng: -87.6298, name: 'Chicago', country: 'USA' },
-  { lat: 34.0522, lng: -118.2437, name: 'Los Angeles', country: 'USA' },
-  { lat: 1.3521, lng: 103.8198, name: 'Singapore', country: 'Singapore' },
-  { lat: 25.2048, lng: 55.2708, name: 'Dubai', country: 'UAE' },
-  { lat: -26.2041, lng: 28.0473, name: 'Johannesburg', country: 'South Africa' },
-  { lat: 43.6532, lng: -79.3832, name: 'Toronto', country: 'Canada' },
-  { lat: 37.5665, lng: 126.9780, name: 'Seoul', country: 'South Korea' },
-  { lat: 23.1291, lng: 113.2644, name: 'Guangzhou', country: 'China' },
-  { lat: 12.9716, lng: 77.5946, name: 'Bangalore', country: 'India' }
-];
-
-const CitySelector: React.FC<CitySelectorProps> = ({ selectedCity, onCitySelect }) => {
+export default function CitySelector({ onCitySelect, selectedCity }: CitySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState<string>('All');
 
-  const filteredCities = majorCities.filter(city =>
-    city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    city.country.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const allCities = useMemo(() => populationDensityService.getAllCities(), []);
 
-  const handleCitySelect = (city: City) => {
+  const regions = useMemo(() => {
+    const uniqueRegions = [...new Set(allCities.map(city => city.region))];
+    return ['All', ...uniqueRegions];
+  }, [allCities]);
+
+  const filteredCities = useMemo(() => {
+    let filtered = allCities;
+
+    if (selectedRegion !== 'All') {
+      filtered = filtered.filter(city => city.region === selectedRegion);
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(city =>
+        city.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        city.country.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }, [allCities, selectedRegion, searchTerm]);
+
+  const handleCityClick = (city: City) => {
     onCitySelect(city);
-    setIsOpen(false);
-    setSearchTerm('');
-  };
-
-  const handleClearSelection = () => {
-    onCitySelect(null);
     setIsOpen(false);
     setSearchTerm('');
   };
 
   return (
     <div className="relative">
+      {/* City Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 bg-[#111111] hover:bg-black/90  rounded-md text-sm font-medium flex items-center justify-between"
+        className="w-full p-3 bg-gray-800/50 border border-gray-700/50 rounded-lg text-left text-white hover:bg-gray-700/50 transition-colors"
       >
-        <span className="truncate">
-          {selectedCity ? `${selectedCity.name}` : '🌍 Select Impact City'}
-        </span>
-        <svg className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-        </svg>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">
+              {selectedCity ? selectedCity.name : 'Select a City'}
+            </div>
+            {selectedCity && (
+              <div className="text-xs text-gray-400">
+                {selectedCity.country} • {selectedCity.region}
+              </div>
+            )}
+          </div>
+          <div className="text-gray-400">
+            {isOpen ? '▲' : '▼'}
+          </div>
+        </div>
       </button>
 
+      {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-full bg-black/90  border border-[#111111]  rounded-md shadow-lg z-50 max-h-60 overflow-hidden">
-          {/* Search */}
-          <div className="p-3 border-b border-gray-700">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900/95 backdrop-blur-lg border border-gray-700/50 rounded-lg shadow-2xl z-50 max-h-80 overflow-hidden">
+          {/* Search and Filter Controls */}
+          <div className="p-3 border-b border-gray-700/50">
             <input
               type="text"
               placeholder="Search cities..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 bg-black/90  border border-[#111111] rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 bg-gray-800/50 border border-gray-700/50 rounded text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
             />
+
+            <div className="mt-2">
+              <select
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+                className="w-full p-2 bg-gray-800/50 border border-gray-700/50 rounded text-white focus:outline-none focus:border-blue-500"
+              >
+                {regions.map(region => (
+                  <option key={region} value={region} className="bg-gray-800">
+                    {region}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* City List */}
-          <div className="max-h-48 overflow-y-auto">
-            {filteredCities.length > 0 ? (
+          {/* Cities List */}
+          <div className="max-h-60 overflow-y-auto">
+            {filteredCities.length === 0 ? (
+              <div className="p-3 text-gray-400 text-center">
+                No cities found
+              </div>
+            ) : (
               filteredCities.map((city) => (
                 <button
-                  key={`${city.lat}-${city.lng}`}
-                  onClick={() => handleCitySelect(city)}
-                  className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-900  transition-colors ${selectedCity?.name === city.name ? 'bg-blue-600 text-white' : 'text-gray-300'
+                  key={`${city.name}-${city.country}`}
+                  onClick={() => handleCityClick(city)}
+                  className={`w-full p-3 text-left hover:bg-gray-700/50 transition-colors border-b border-gray-700/30 last:border-b-0 ${selectedCity?.name === city.name && selectedCity?.country === city.country
+                      ? 'bg-blue-500/20 border-l-4 border-l-blue-400'
+                      : ''
                     }`}
                 >
-                  <div className="font-medium">{city.name}</div>
-                  <div className="text-xs text-gray-400">{city.country}</div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="text-white font-medium">{city.name}</div>
+                      <div className="text-sm text-gray-400">
+                        {city.country} • {city.region}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {city.density.toLocaleString()}/km²
+                    </div>
+                  </div>
                 </button>
               ))
-            ) : (
-              <div className="px-3 py-2 text-sm text-gray-400">No cities found</div>
             )}
           </div>
-
-          {/* Clear Selection */}
-          {selectedCity && (
-            <div className="p-3 border-t border-gray-700">
-              <button
-                onClick={handleClearSelection}
-                className="w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium transition-colors"
-              >
-                Clear Selection
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>
   );
-};
-
-export default CitySelector;
+}

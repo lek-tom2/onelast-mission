@@ -20,8 +20,15 @@ interface AsteroidStore {
   // Filtering and sorting
   sortOption: SortOption;
   filterOption: FilterOption;
-  selectedCity: { lat: number; lng: number; name: string } | null;
-  
+  selectedCity: {
+    name: string;
+    lat: number;
+    lng: number;
+    country: string;
+    region: string;
+    density: number;
+  } | null;
+
   // Actions
   selectScenario: (scenario: ImpactScenario) => void;
   selectAsteroidDetails: (scenario: ImpactScenario | null) => void;
@@ -38,7 +45,14 @@ interface AsteroidStore {
   // Filtering and sorting actions
   setSortOption: (option: SortOption) => void;
   setFilterOption: (option: FilterOption) => void;
-  setSelectedCity: (city: { lat: number; lng: number; name: string } | null) => void;
+  setSelectedCity: (city: {
+    name: string;
+    lat: number;
+    lng: number;
+    country: string;
+    region: string;
+    density: number;
+  } | null) => void;
 }
 
 export const useAsteroidStore = create<AsteroidStore>((set) => ({
@@ -64,36 +78,36 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
 
   // Actions
   selectScenario: (scenario) => set({ selectedScenario: scenario }),
-  
+
   selectAsteroidDetails: (scenario) => set({ selectedAsteroidDetails: scenario }),
-  
+
   clearScenario: () => set({ selectedScenario: null }),
-  
+
   addAsteroid: (asteroid) => set((state) => ({
     asteroids: [...state.asteroids, asteroid]
   })),
-  
+
   removeAsteroid: (id) => set((state) => ({
     asteroids: state.asteroids.filter(asteroid => asteroid.id !== id)
   })),
-  
+
   updateCameraState: (newState) => set((state) => ({
     cameraState: { ...state.cameraState, ...newState }
   })),
-  
+
   setPlaying: (playing) => set({ isPlaying: playing }),
-  
+
   toggleTrajectories: () => set((state) => ({
     showTrajectories: !state.showTrajectories
   })),
-  
+
   toggleConsequences: () => set((state) => ({
     showConsequences: !state.showConsequences
   })),
-  
+
   generateRandomAsteroids: (count) => {
     const asteroids: Asteroid[] = [];
-    
+
     for (let i = 0; i < count; i++) {
       const asteroid: Asteroid = {
         id: `asteroid-${i}`,
@@ -116,16 +130,23 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
           distance: Math.random() * 1000000 + 10000 // 10,000 - 1,010,000 km
         }
       };
-      
+
       asteroids.push(asteroid);
     }
-    
+
     set({ asteroids });
   },
-  
+
   // Filtering and sorting actions
   setSortOption: (option) => set({ sortOption: option }),
   setFilterOption: (option) => set({ filterOption: option }),
-  setSelectedCity: (city) => set({ selectedCity: city }),
+  setSelectedCity: (city: {
+    name: string;
+    lat: number;
+    lng: number;
+    country: string;
+    region: string;
+    density: number;
+  } | null) => set({ selectedCity: city }),
   setGameMode: (mode) => set({ gameMode: mode })
 }));

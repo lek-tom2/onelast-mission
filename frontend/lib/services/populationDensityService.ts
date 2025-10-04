@@ -66,14 +66,21 @@ class PopulationDensityService {
       { name: 'Rome', lat: 41.9028, lng: 12.4964, density: 4000, radius: 25, country: 'Italy', region: 'Europe' },
       { name: 'Madrid', lat: 40.4168, lng: -3.7038, density: 5500, radius: 30, country: 'Spain', region: 'Europe' },
 
-      // Polish Cities
+      // Additional European Cities
+      { name: 'Amsterdam', lat: 52.3676, lng: 4.9041, density: 4000, radius: 20, country: 'Netherlands', region: 'Europe' },
+      { name: 'Vienna', lat: 48.2082, lng: 16.3738, density: 3000, radius: 25, country: 'Austria', region: 'Europe' },
+      { name: 'Prague', lat: 50.0755, lng: 14.4378, density: 2500, radius: 20, country: 'Czech Republic', region: 'Europe' },
       { name: 'Warsaw', lat: 52.2297, lng: 21.0122, density: 3500, radius: 25, country: 'Poland', region: 'Europe' },
-      { name: 'Krakow', lat: 50.0647, lng: 19.9450, density: 2500, radius: 20, country: 'Poland', region: 'Europe' },
-      { name: 'Gdansk', lat: 54.3520, lng: 18.6466, density: 2000, radius: 18, country: 'Poland', region: 'Europe' },
-      { name: 'Szczecin', lat: 53.4285, lng: 14.5528, density: 1800, radius: 15, country: 'Poland', region: 'Europe' },
-      { name: 'Wroclaw', lat: 51.1079, lng: 17.0385, density: 2200, radius: 20, country: 'Poland', region: 'Europe' },
-      { name: 'Poznan', lat: 52.4064, lng: 16.9252, density: 2000, radius: 18, country: 'Poland', region: 'Europe' },
-      { name: 'Lodz', lat: 51.7592, lng: 19.4560, density: 1800, radius: 15, country: 'Poland', region: 'Europe' },
+      { name: 'Budapest', lat: 47.4979, lng: 19.0402, density: 3000, radius: 25, country: 'Hungary', region: 'Europe' },
+      { name: 'Stockholm', lat: 59.3293, lng: 18.0686, density: 2000, radius: 20, country: 'Sweden', region: 'Europe' },
+      { name: 'Oslo', lat: 59.9139, lng: 10.7522, density: 1500, radius: 15, country: 'Norway', region: 'Europe' },
+      { name: 'Copenhagen', lat: 55.6761, lng: 12.5683, density: 2500, radius: 20, country: 'Denmark', region: 'Europe' },
+      { name: 'Helsinki', lat: 60.1699, lng: 24.9384, density: 2000, radius: 18, country: 'Finland', region: 'Europe' },
+      { name: 'Zurich', lat: 47.3769, lng: 8.5417, density: 3000, radius: 20, country: 'Switzerland', region: 'Europe' },
+      { name: 'Brussels', lat: 50.8503, lng: 4.3517, density: 4000, radius: 20, country: 'Belgium', region: 'Europe' },
+      { name: 'Athens', lat: 37.9838, lng: 23.7275, density: 3500, radius: 25, country: 'Greece', region: 'Europe' },
+      { name: 'Lisbon', lat: 38.7223, lng: -9.1393, density: 3000, radius: 20, country: 'Portugal', region: 'Europe' },
+      { name: 'Dublin', lat: 53.3498, lng: -6.2603, density: 2500, radius: 18, country: 'Ireland', region: 'Europe' },
 
       // North American Cities
       { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, density: 4000, radius: 80, country: 'USA', region: 'North America' },
@@ -87,11 +94,54 @@ class PopulationDensityService {
       { name: 'Jakarta', lat: -6.2088, lng: 106.8456, density: 15000, radius: 50, country: 'Indonesia', region: 'Asia' },
       { name: 'Manila', lat: 14.5995, lng: 120.9842, density: 18000, radius: 30, country: 'Philippines', region: 'Asia' },
 
-      // Other Major Cities
-      { name: 'Sydney', lat: -33.8688, lng: 151.2093, density: 2000, radius: 60, country: 'Australia', region: 'Oceania' },
-      { name: 'Buenos Aires', lat: -34.6118, lng: -58.3960, density: 6000, radius: 40, country: 'Argentina', region: 'South America' },
-      { name: 'Lima', lat: -12.0464, lng: -77.0428, density: 8000, radius: 35, country: 'Peru', region: 'South America' },
-      { name: 'Bogotá', lat: 4.7110, lng: -74.0721, density: 7000, radius: 30, country: 'Colombia', region: 'South America' },
+      // Additional Asian Cities
+      { name: 'Hong Kong', lat: 22.3193, lng: 114.1694, density: 20000, radius: 25, country: 'Hong Kong', region: 'Asia' },
+      { name: 'Singapore', lat: 1.3521, lng: 103.8198, density: 15000, radius: 20, country: 'Singapore', region: 'Asia' },
+      { name: 'Kuala Lumpur', lat: 3.1390, lng: 101.6869, density: 4000, radius: 30, country: 'Malaysia', region: 'Asia' },
+      { name: 'Ho Chi Minh City', lat: 10.8231, lng: 106.6297, density: 12000, radius: 35, country: 'Vietnam', region: 'Asia' },
+      { name: 'Hanoi', lat: 21.0285, lng: 105.8542, density: 8000, radius: 25, country: 'Vietnam', region: 'Asia' },
+      { name: 'Yangon', lat: 16.8661, lng: 96.1951, density: 6000, radius: 30, country: 'Myanmar', region: 'Asia' },
+      { name: 'Phnom Penh', lat: 11.5564, lng: 104.9282, density: 4000, radius: 20, country: 'Cambodia', region: 'Asia' },
+      { name: 'Vientiane', lat: 17.9757, lng: 102.6331, density: 2000, radius: 15, country: 'Laos', region: 'Asia' },
+
+      // Additional African Cities
+      { name: 'Cape Town', lat: -33.9249, lng: 18.4241, density: 3000, radius: 30, country: 'South Africa', region: 'Africa' },
+      { name: 'Johannesburg', lat: -26.2041, lng: 28.0473, density: 4000, radius: 35, country: 'South Africa', region: 'Africa' },
+      { name: 'Nairobi', lat: -1.2921, lng: 36.8219, density: 5000, radius: 25, country: 'Kenya', region: 'Africa' },
+      { name: 'Addis Ababa', lat: 9.1450, lng: 38.7667, density: 4000, radius: 30, country: 'Ethiopia', region: 'Africa' },
+      { name: 'Casablanca', lat: 33.5731, lng: -7.5898, density: 6000, radius: 25, country: 'Morocco', region: 'Africa' },
+      { name: 'Algiers', lat: 36.7538, lng: 3.0588, density: 5000, radius: 25, country: 'Algeria', region: 'Africa' },
+      { name: 'Tunis', lat: 36.8065, lng: 10.1815, density: 4000, radius: 20, country: 'Tunisia', region: 'Africa' },
+      { name: 'Tripoli', lat: 32.8872, lng: 13.1913, density: 3000, radius: 20, country: 'Libya', region: 'Africa' },
+
+      // Additional South American Cities
+      { name: 'Santiago', lat: -33.4489, lng: -70.6693, density: 5000, radius: 30, country: 'Chile', region: 'South America' },
+      { name: 'Montevideo', lat: -34.9011, lng: -56.1645, density: 3000, radius: 20, country: 'Uruguay', region: 'South America' },
+      { name: 'Asuncion', lat: -25.2637, lng: -57.5759, density: 2000, radius: 15, country: 'Paraguay', region: 'South America' },
+      { name: 'La Paz', lat: -16.2902, lng: -68.1342, density: 4000, radius: 20, country: 'Bolivia', region: 'South America' },
+      { name: 'Quito', lat: -0.1807, lng: -78.4678, density: 3000, radius: 25, country: 'Ecuador', region: 'South America' },
+      { name: 'Caracas', lat: 10.4806, lng: -66.9036, density: 6000, radius: 30, country: 'Venezuela', region: 'South America' },
+      { name: 'Georgetown', lat: 6.8013, lng: -58.1551, density: 1500, radius: 15, country: 'Guyana', region: 'South America' },
+      { name: 'Paramaribo', lat: 5.8520, lng: -55.2038, density: 1000, radius: 10, country: 'Suriname', region: 'South America' },
+
+      // Additional North American Cities
+      { name: 'Vancouver', lat: 49.2827, lng: -123.1207, density: 3000, radius: 30, country: 'Canada', region: 'North America' },
+      { name: 'Montreal', lat: 45.5017, lng: -73.5673, density: 4000, radius: 25, country: 'Canada', region: 'North America' },
+      { name: 'Calgary', lat: 51.0447, lng: -114.0719, density: 2000, radius: 20, country: 'Canada', region: 'North America' },
+      { name: 'Ottawa', lat: 45.4215, lng: -75.6972, density: 1500, radius: 15, country: 'Canada', region: 'North America' },
+      { name: 'Quebec City', lat: 46.8139, lng: -71.2080, density: 1000, radius: 12, country: 'Canada', region: 'North America' },
+      { name: 'Winnipeg', lat: 49.8951, lng: -97.1384, density: 1500, radius: 15, country: 'Canada', region: 'North America' },
+      { name: 'Edmonton', lat: 53.5461, lng: -113.4938, density: 1200, radius: 15, country: 'Canada', region: 'North America' },
+      { name: 'Halifax', lat: 44.6488, lng: -63.5752, density: 800, radius: 10, country: 'Canada', region: 'North America' },
+
+      // Additional Oceania Cities
+      { name: 'Melbourne', lat: -37.8136, lng: 144.9631, density: 2500, radius: 50, country: 'Australia', region: 'Oceania' },
+      { name: 'Brisbane', lat: -27.4698, lng: 153.0251, density: 2000, radius: 40, country: 'Australia', region: 'Oceania' },
+      { name: 'Perth', lat: -31.9505, lng: 115.8605, density: 1500, radius: 35, country: 'Australia', region: 'Oceania' },
+      { name: 'Adelaide', lat: -34.9285, lng: 138.6007, density: 1200, radius: 25, country: 'Australia', region: 'Oceania' },
+      { name: 'Auckland', lat: -36.8485, lng: 174.7633, density: 2000, radius: 30, country: 'New Zealand', region: 'Oceania' },
+      { name: 'Wellington', lat: -41.2924, lng: 174.7787, density: 1500, radius: 20, country: 'New Zealand', region: 'Oceania' },
+      { name: 'Christchurch', lat: -43.5321, lng: 172.6362, density: 1000, radius: 15, country: 'New Zealand', region: 'Oceania' },
     ];
 
   // Regional population density baselines (people per km²) - more realistic
@@ -107,6 +157,36 @@ class PopulationDensityService {
   // Ocean and remote area densities
   private oceanDensity = 0;
   private remoteAreaDensity = 1;
+
+  /**
+   * Get all major cities for selection
+   */
+  getAllCities() {
+    return this.populationCenters.map(city => ({
+      name: city.name,
+      lat: city.lat,
+      lng: city.lng,
+      country: city.country,
+      region: city.region,
+      density: city.density
+    }));
+  }
+
+  /**
+   * Get cities by region
+   */
+  getCitiesByRegion(region: string) {
+    return this.populationCenters
+      .filter(city => city.region === region)
+      .map(city => ({
+        name: city.name,
+        lat: city.lat,
+        lng: city.lng,
+        country: city.country,
+        region: city.region,
+        density: city.density
+      }));
+  }
 
   /**
    * Get population data for a specific latitude/longitude coordinate
