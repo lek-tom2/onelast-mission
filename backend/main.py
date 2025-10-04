@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from dotenv import load_dotenv
 import os
@@ -22,9 +23,6 @@ app.add_middleware(
 )
 
 async def neo_all(start_date: str, end_date: str):
-    # Check where we're running from
-    print(f"Current working directory: {os.getcwd()}")
-    
     req = requests.get(f"https://api.nasa.gov/neo/rest/v1/feed?start_date={start_date}&end_date={end_date}&api_key={api_key}")
     data = req.json()
     
@@ -75,24 +73,60 @@ async def get_neo_one(neo_id: int):
 
 @app.get("/neo_data_per_object/")
 async def get_neo_per_obj(start_date: str, end_date: str):
-    neo_data = await neo_all(start_date=start_date, end_date=end_date)
-    neo = neo_data["near_earth_objects"]
-    arr_neo = []
-    for key in neo:
-        for elem in neo[key]:
-            arr_neo.append(elem)
+    try:
+        neo_data = await neo_all(start_date=start_date, end_date=end_date)
+        neo = neo_data["near_earth_objects"]
+        arr_neo = []
+        for key in neo:
+            for elem in neo[key]:
+                arr_neo.append(elem)
+        
+        neo_ids = []
+        
+        for elem in arr_neo:
+            neo_ids.append(elem['id'])
+        
+        neo_params = {}
+        for i in neo_ids:
+            try:
+                data = await neo_one(i)
+                # The NASA API response has orbital data directly in the response
+                orbital_info = {
+                    "orbit_id": data.get('orbit_id', ''),
+                    "orbit_determination_date": data.get('orbit_determination_date', ''),
+                    "first_observation_date": data.get('first_observation_date', ''),
+                    "last_observation_date": data.get('last_observation_date', ''),
+                    "data_arc_in_days": data.get('data_arc_in_days', 0),
+                    "observations_used": data.get('observations_used', 0),
+                    "orbit_uncertainty": data.get('orbit_uncertainty', ''),
+                    "minimum_orbit_intersection": data.get('minimum_orbit_intersection', ''),
+                    "jupiter_tisserand_invariant": data.get('jupiter_tisserand_invariant', ''),
+                    "epoch_osculation": data.get('epoch_osculation', ''),
+                    "eccentricity": data.get('eccentricity', ''),
+                    "semi_major_axis": data.get('semi_major_axis', ''),
+                    "inclination": data.get('inclination', ''),
+                    "ascending_node_longitude": data.get('ascending_node_longitude', ''),
+                    "orbital_period": data.get('orbital_period', ''),
+                    "perihelion_distance": data.get('perihelion_distance', ''),
+                    "perihelion_argument": data.get('perihelion_argument', ''),
+                    "aphelion_distance": data.get('aphelion_distance', ''),
+                    "perihelion_time": data.get('perihelion_time', ''),
+                    "mean_anomaly": data.get('mean_anomaly', ''),
+                    "mean_motion": data.get('mean_motion', ''),
+                    "equinox": data.get('equinox', ''),
+                    "orbit_class": data.get('orbit_class', {})
+                }
+                
+                neo_params[data['name']] = orbital_info
+            except Exception as e:
+                print(f"Error processing NEO ID {i}: {str(e)}")
+                continue
+        
+        return JSONResponse(content=neo_params)
     
-    neo_ids = []
-    
-    for elem in arr_neo:
-        neo_ids.append(elem['id'])
-    
-    neo_params = {}
-    for i in neo_ids:
-        data = await neo_one(i)
-        neo_params[data['name']] = data['orbital_data']
-
-    return JSONResponse(content=neo_params)
+    except Exception as e:
+        print(f"Error in get_neo_per_obj: {str(e)}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 app.include_router(app_ws, prefix='/time')
 

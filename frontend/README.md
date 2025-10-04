@@ -524,17 +524,68 @@ The asteroid details panel displays comprehensive information about selected ast
 
 ### **3D Earth Visualization**
 
-#### **Impact Visualization Display**
-When clicking on Earth after selecting an asteroid:
-- **Immediate Blast Zone**: Red wireframe sphere showing complete destruction area
-- **Thermal Radiation Zone**: Orange wireframe sphere showing fire damage area
-- **Seismic Effects Zone**: Yellow wireframe sphere showing earthquake effects area
-- **Impact Crater**: Brown solid sphere showing crater size (land impacts only)
-- **Tsunami Zone**: Blue wireframe sphere showing tsunami effects (ocean impacts only)
+#### **Impact Visualization Spheres**
+When you click on Earth after selecting an asteroid, the application displays several colored spheres representing different impact zones. These spheres are scaled to show the actual calculated radii and rotate with the Earth:
 
-#### **Population Impact Information**
-- **Location Coordinates**: Exact lat/lng of impact point
-- **Total Affected**: Number of people in all impact zones
+##### **Red Wireframe Sphere - Immediate Blast Zone**
+- **Color**: Bright red (#ff0000)
+- **Style**: Wireframe (hollow) with 40% opacity
+- **Purpose**: Shows the area of complete destruction from the initial blast
+- **Calculation**: Based on nuclear weapon scaling law: `R = 0.28 * E^(1/3)` where E is energy in kilotons
+- **Effects**: Complete destruction of all structures, 100% fatality rate
+- **Label**: "IMMEDIATE BLAST (X.XXX km)" displayed next to the sphere
+- **Visual Scale**: Limited to maximum 0.5 Earth radius for visibility
+
+##### **Orange Wireframe Sphere - Thermal Radiation Zone**
+- **Color**: Orange (#ff8800)
+- **Style**: Wireframe (hollow) with 25% opacity
+- **Purpose**: Shows the area affected by thermal radiation and fire
+- **Calculation**: Typically 2-3 times the blast radius
+- **Effects**: Severe burns, fires, structural damage, high fatality rate
+- **Label**: "THERMAL RADIATION (X.XXX km)" displayed next to the sphere
+- **Visual Scale**: Limited to maximum 1.0 Earth radius for visibility
+
+##### **Yellow Wireframe Sphere - Seismic Effects Zone**
+- **Color**: Yellow (#ffff00)
+- **Style**: Wireframe (hollow) with 20% opacity
+- **Purpose**: Shows the area affected by earthquake-like seismic effects
+- **Calculation**: Typically 5-10 times the blast radius
+- **Effects**: Building damage, ground shaking, moderate casualty rate
+- **Label**: "SEISMIC EFFECTS (X.XXX km)" displayed next to the sphere
+- **Visual Scale**: Limited to maximum 2.0 Earth radius for visibility
+
+##### **Brown Solid Sphere - Impact Crater (Land Only)**
+- **Color**: Brown (#8b4513)
+- **Style**: Solid sphere with 70% opacity
+- **Purpose**: Shows the actual crater size created by the impact
+- **Calculation**: Based on asteroid size and impact energy
+- **Effects**: Permanent geological feature, excavation of material
+- **Label**: "CRATER (X.XXX km)" displayed below the sphere
+- **Condition**: Only appears for land impacts (not water impacts)
+- **Visual Scale**: Limited to maximum 0.3 Earth radius for visibility
+
+##### **Blue Wireframe Sphere - Tsunami Zone (Water Only)**
+- **Color**: Blue (#0066cc)
+- **Style**: Wireframe (hollow) with 30% opacity
+- **Purpose**: Shows the area affected by tsunami waves from water impacts
+- **Calculation**: Uses seismic radius as tsunami propagation area
+- **Effects**: Massive waves, coastal flooding, widespread destruction
+- **Label**: "TSUNAMI ZONE" displayed above the sphere
+- **Condition**: Only appears for water impacts (not land impacts)
+- **Visual Scale**: Limited to maximum 2.0 Earth radius for visibility
+
+#### **Additional Information Display**
+- **Asteroid Name**: White text showing the official NASA name
+- **Energy and Size**: Gray text showing impact energy in megatons and asteroid diameter in meters
+- **Impact Coordinates**: Red text showing latitude and longitude of impact point
+- **Population Impact**: Orange text showing total affected population
+- **Casualty Estimates**: Red text showing estimated casualties
+
+#### **Interactive Features**
+- **Earth Rotation Control**: Earth stops rotating when an asteroid is selected for easier impact calculation
+- **Click to Impact**: Click anywhere on Earth to simulate impact at that location
+- **Real-time Calculation**: All spheres and data update based on the selected asteroid's properties
+- **Coordinate Conversion**: 3D click coordinates are converted to latitude/longitude for population calculations
 - **Estimated Casualties**: Total casualties across all zones
 - **Zone Breakdown**: Casualties for blast, thermal, and seismic zones
 
@@ -570,11 +621,13 @@ When clicking on Earth after selecting an asteroid:
 
 ### **Data Sources and Validation**
 
-#### **NASA NEO API Data**
-- **Real-time Data**: Current and historical asteroid information
-- **Scientific Accuracy**: Official NASA orbital mechanics data
-- **Regular Updates**: Data refreshed every 24 hours
-- **Comprehensive Coverage**: All near-Earth objects tracked by NASA
+#### **Direct Backend API Connection**
+- **Real-time Data**: Current and historical asteroid information via direct backend connection
+- **Scientific Accuracy**: Official NASA orbital mechanics data processed by local API
+- **Regular Updates**: Data refreshed every 24 hours through local backend
+- **Comprehensive Coverage**: All near-Earth objects tracked by NASA via localhost:8000
+- **No Proxy Issues**: Direct connection eliminates Next.js proxy complications
+- **Enhanced Reliability**: 5-minute timeout for complex data processing
 
 #### **Population Data Sources**
 - **Major Cities**: 30+ cities with accurate population densities
@@ -592,11 +645,12 @@ This comprehensive system provides realistic, location-specific casualty estimat
 
 ## Data Sources
 
-- **NASA NEO API**: [https://api.nasa.gov/](https://api.nasa.gov/)
-- **Real-time Data**: Current and historical asteroid information
-- **Scientific Models**: Impact consequence calculations
-- **Orbital Mechanics**: Trajectory and collision probability
-- **Population Data**: City-specific impact scenarios
+- **Direct Backend API**: http://localhost:8000 (Direct connection to your backend API)
+- **NASA NEO API**: [https://api.nasa.gov/](https://api.nasa.gov/) (Called indirectly via your backend)
+- **Real-time Data**: Current and historical asteroid information processed by local backend
+- **Scientific Models**: Impact consequence calculations based on nuclear weapon scaling laws
+- **Orbital Mechanics**: Trajectory and collision probability from NASA orbital data
+- **Population Data**: Real population density data for 30+ major cities worldwide
 
 ## Project Structure
 
@@ -628,9 +682,9 @@ frontend/
 
 ## API Integration
 
-### **NASA NEO API**
+### **Direct Backend API Connection**
 ```typescript
-// Fetch asteroid data for date range
+// Fetch asteroid data directly from backend
 const data = await nasaApiService.getNearEarthObjects(startDate, endDate);
 
 // Get specific asteroid details
@@ -638,11 +692,12 @@ const asteroid = await nasaApiService.getAsteroidDetails(asteroidId);
 ```
 
 ### **Data Flow**
-1. **API Request** → NASA NEO API
-2. **Data Processing** → Filter and categorize asteroids
-3. **Trajectory Calculation** → Compute orbital paths
-4. **Impact Modeling** → Calculate consequences
-5. **3D Rendering** → Display in Three.js scene
+1. **Direct API Request** → Backend at localhost:8000
+2. **Backend Processing** → NASA NEO API data processing
+3. **Data Processing** → Filter and categorize asteroids
+4. **Trajectory Calculation** → Compute orbital paths
+5. **Impact Modeling** → Calculate consequences
+6. **3D Rendering** → Display in Three.js scene
 
 ### **State Management**
 ```typescript
