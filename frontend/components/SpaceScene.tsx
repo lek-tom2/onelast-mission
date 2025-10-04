@@ -154,8 +154,8 @@ function CameraController() {
       enablePan={true}
       enableZoom={true}
       enableRotate={true}
-      minDistance={1}
-      maxDistance={20}
+      minDistance={1.5}
+      maxDistance={6}
       onChange={handleCameraChange}
     />
   );
