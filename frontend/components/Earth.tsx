@@ -195,7 +195,22 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
 
             // Calculate consequences based on selected asteroid and impact point
             const consequences = calculateImpactConsequences(selectedAsteroidDetails, coords.lat, coords.lng);
-            setImpactConsequences({ ...consequences, populationImpact: populationData });
+
+            // Calculate detailed population impact using optimized analysis
+            const populationImpact = populationDensityService.calculateImpactCasualties(
+                coords.lat,
+                coords.lng,
+                consequences.immediateBlastRadius,
+                consequences.thermalRadius,
+                consequences.seismicRadius,
+                selectedAsteroidDetails.energy
+            );
+
+            setImpactConsequences({
+                ...consequences,
+                populationImpact: populationData,
+                detailedPopulationImpact: populationImpact
+            });
         }
     };
 
@@ -249,14 +264,13 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
             )}
 
             {/* Impact Visualization - Rotates with Earth */}
-            {localImpactPosition && selectedAsteroidDetails && showConsequences && (() => {
+            {localImpactPosition && selectedAsteroidDetails && showConsequences && impactConsequences && (() => {
                 const coords = vector3ToLatLng(localImpactPosition);
-                const consequences = calculateImpactConsequences(selectedAsteroidDetails, coords.lat, coords.lng);
                 return (
                     <ImpactVisualization
                         position={localImpactPosition}
                         asteroid={selectedAsteroidDetails}
-                        consequences={consequences}
+                        consequences={impactConsequences}
                         coordinates={coords}
                     />
                 );
@@ -281,6 +295,16 @@ function ImpactVisualization({
         craterSize: number;
         isWaterImpact: boolean;
         populationImpact: {
+            latitude: number;
+            longitude: number;
+            populationDensity: number;
+            totalPopulation: number;
+            country: string;
+            region: string;
+            isUrban: boolean;
+            isCoastal: boolean;
+        };
+        detailedPopulationImpact: {
             totalAffected: number;
             totalCasualties: number;
             immediateBlast: { population: number; casualties: number; casualtyRate: number };
@@ -290,7 +314,7 @@ function ImpactVisualization({
     };
     coordinates: { lat: number; lng: number };
 }) {
-    const { immediateBlastRadius, thermalRadius, seismicRadius, craterSize, isWaterImpact, populationImpact } = consequences;
+    const { immediateBlastRadius, thermalRadius, seismicRadius, craterSize, isWaterImpact, detailedPopulationImpact } = consequences;
 
     return (
         <group>
@@ -432,7 +456,7 @@ function ImpactVisualization({
             </Text>
 
             {/* Population Impact Information */}
-            {populationImpact && (
+            {detailedPopulationImpact && (
                 <>
                     <Text
                         position={[0, 0.08, 0]}
@@ -441,7 +465,7 @@ function ImpactVisualization({
                         anchorX="center"
                         anchorY="middle"
                     >
-                        Location: {coordinates.lat.toFixed(1)}°N, {coordinates.lng.toFixed(1)}°E
+                        Location: {coordinates.lat.toFixed(4)}°N, {coordinates.lng.toFixed(4)}°E
                     </Text>
 
                     <Text
@@ -451,7 +475,7 @@ function ImpactVisualization({
                         anchorX="center"
                         anchorY="middle"
                     >
-                        Total Affected: {populationImpact.totalAffected.toLocaleString()} people
+                        Total Affected: {detailedPopulationImpact.totalAffected.toLocaleString()} people
                     </Text>
 
                     <Text
@@ -461,7 +485,7 @@ function ImpactVisualization({
                         anchorX="center"
                         anchorY="middle"
                     >
-                        Estimated Casualties: {populationImpact.totalCasualties.toLocaleString()}
+                        Estimated Casualties: {detailedPopulationImpact.totalCasualties.toLocaleString()}
                     </Text>
 
                     <Text
@@ -471,9 +495,9 @@ function ImpactVisualization({
                         anchorX="center"
                         anchorY="middle"
                     >
-                        Blast: {populationImpact.immediateBlast.casualties.toLocaleString()} |
-                        Thermal: {populationImpact.thermalRadiation.casualties.toLocaleString()} |
-                        Seismic: {populationImpact.seismicEffects.casualties.toLocaleString()}
+                        Blast: {detailedPopulationImpact.immediateBlast.casualties.toLocaleString()} ({detailedPopulationImpact.immediateBlast.casualtyRate.toFixed(1)}%) |
+                        Thermal: {detailedPopulationImpact.thermalRadiation.casualties.toLocaleString()} ({detailedPopulationImpact.thermalRadiation.casualtyRate.toFixed(1)}%) |
+                        Seismic: {detailedPopulationImpact.seismicEffects.casualties.toLocaleString()} ({detailedPopulationImpact.seismicEffects.casualtyRate.toFixed(1)}%)
                     </Text>
                 </>
             )}
