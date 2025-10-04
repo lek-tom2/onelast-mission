@@ -51,7 +51,7 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
   return (
     <div className={`fixed left-4 top-4 bottom-4 z-40 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-96'
       }`}>
-      <div className="h-full bg-gray-900/95 backdrop-blur-lg rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+      <div className="h-full bg-gray-900/95 backdrop-blur-lg rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-gray-700/50">
           <div className="flex items-center justify-between">
