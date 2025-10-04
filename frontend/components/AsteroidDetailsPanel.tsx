@@ -8,12 +8,15 @@ import { populationDensityService } from '@/lib/services/populationDensityServic
 interface AsteroidDetailsPanelProps {
   scenario: ImpactScenario | null;
   onClose: () => void;
+  onLaunch?: (scenario: ImpactScenario) => void;
+  hasImpactPoint?: boolean;
 }
 
-export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDetailsPanelProps) {
+export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasImpactPoint = false }: AsteroidDetailsPanelProps) {
   const [selectedCity, setSelectedCity] = useState<{ lat: number; lng: number; name: string } | null>(null);
   const [calculatedScenario, setCalculatedScenario] = useState<ImpactScenario | null>(null);
-  
+  const [isLaunching, setIsLaunching] = useState(false);
+
   if (!scenario) return null;
 
   // Debug: Log the scenario data to see what we're getting
@@ -24,9 +27,9 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
 
   // Use calculated scenario if available, otherwise use original
   const displayScenario = calculatedScenario || scenario;
-  
+
   // Calculate population-based casualties if a city is selected
-  const populationImpact = selectedCity && displayScenario ? 
+  const populationImpact = selectedCity && displayScenario ?
     populationDensityService.calculateImpactCasualties(
       selectedCity.lat,
       selectedCity.lng,
@@ -48,6 +51,19 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
     return { level: 'MEDIUM', color: '#44ff44' };
   };
 
+  const handleLaunch = async () => {
+    if (!onLaunch) return;
+
+    setIsLaunching(true);
+    try {
+      // Add a small delay for visual feedback
+      await new Promise(resolve => setTimeout(resolve, 500));
+      onLaunch(displayScenario);
+    } finally {
+      setIsLaunching(false);
+    }
+  };
+
   const getComposition = (energy: number) => {
     if (energy > 1000) return 'Iron-Nickel (Metallic)';
     if (energy > 500) return 'Stony-Iron (Mixed)';
@@ -60,21 +76,38 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
   return (
     <div className="absolute top-4 right-4 bg-black/90 backdrop-blur-sm rounded-lg p-6 text-white min-w-96 max-w-lg max-h-[90vh] overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-4">
         <h2 className="text-2xl font-bold text-red-400">Asteroid Details</h2>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-white transition-colors text-2xl"
-        >
-          ×
-        </button>
+        <div className="flex items-center gap-3">
+          {onLaunch && (
+            <button
+              onClick={handleLaunch}
+              disabled={isLaunching || !hasImpactPoint}
+              className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${isLaunching
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : !hasImpactPoint
+                  ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                  : 'bg-red-600 hover:bg-red-700 text-white hover:scale-105'
+                }`}
+              title={!hasImpactPoint ? 'Click on Earth to select impact point first' : 'Launch asteroid to selected impact point'}
+            >
+              {isLaunching ? '🚀 Launching...' : !hasImpactPoint ? '🚀 Select Impact Point' : '🚀 Launch Asteroid'}
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors text-2xl"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       {/* City Selection for Impact Calculation */}
-      <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+      <div className="mb-6 p-4 bg-black/90rounded-lg">
         <h3 className="text-lg font-semibold mb-3">Impact City Selection</h3>
         <div className="mb-3">
-          <CitySelector 
+          <CitySelector
             selectedCity={selectedCity}
             onCitySelect={(city) => {
               setSelectedCity(city);
@@ -100,12 +133,12 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
       </div>
 
       {/* Asteroid 3D Preview */}
-      <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+      <div className="mb-6 p-4 bg-black/90 rounded-lg">
         <h3 className="text-lg font-semibold mb-3">Asteroid Preview</h3>
-        <div className="flex items-center justify-center h-32 bg-gray-900 rounded">
-          <div 
-            className="w-16 h-16 rounded-full border-4 border-gray-600 flex items-center justify-center text-2xl"
-            style={{ 
+        <div className="flex items-center justify-center h-32 bg-[#111111] rounded">
+          <div
+            className="w-16 h-16 rounded-full border-4 bg-black/90 flex items-center justify-center text-2xl"
+            style={{
               backgroundColor: getAsteroidTexture(displayScenario.energy),
               boxShadow: `0 0 20px ${getAsteroidTexture(displayScenario.energy)}`
             }}
@@ -144,13 +177,13 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
             <div className="flex justify-between">
               <span className="text-gray-400">Diameter Range:</span>
               <span>
-                {displayScenario.nasaData?.estimated_diameter?.meters ? 
-                  `${displayScenario.nasaData.estimated_diameter.meters.estimated_diameter_min.toFixed(0)} - ${displayScenario.nasaData.estimated_diameter.meters.estimated_diameter_max.toFixed(0)}m` : 
+                {displayScenario.nasaData?.estimated_diameter?.meters ?
+                  `${displayScenario.nasaData.estimated_diameter.meters.estimated_diameter_min.toFixed(0)} - ${displayScenario.nasaData.estimated_diameter.meters.estimated_diameter_max.toFixed(0)}m` :
                   'N/A'
                 }
               </span>
             </div>
-            
+
             {/* Collision Probability */}
             {displayScenario.collisionProbability !== undefined && (
               <div className="mt-3 p-2 bg-red-900/20 rounded border border-red-500">
@@ -161,15 +194,15 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
                   </span>
                 </div>
                 <p className="text-xs text-red-300 mt-1">
-                  {displayScenario.collisionProbability > 0.1 ? '🚨 CRITICAL THREAT' : 
-                   displayScenario.collisionProbability > 0.05 ? '⚠️ HIGH THREAT' :
-                   displayScenario.collisionProbability > 0.01 ? '⚡ MEDIUM THREAT' : '✅ LOW THREAT'}
+                  {displayScenario.collisionProbability > 0.1 ? '🚨 CRITICAL THREAT' :
+                    displayScenario.collisionProbability > 0.05 ? '⚠️ HIGH THREAT' :
+                      displayScenario.collisionProbability > 0.01 ? '⚡ MEDIUM THREAT' : '✅ LOW THREAT'}
                 </p>
               </div>
             )}
           </div>
         </div>
-        
+
         {/* Close Approach Data */}
         {displayScenario.nasaData?.close_approach_data && displayScenario.nasaData.close_approach_data[0] && (
           <div>
@@ -200,6 +233,94 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
         )}
       </div>
 
+      {/* Orbital Data Section */}
+      {(() => {
+        // Extract orbital data from NASA data if available
+        const orbitalData = displayScenario.nasaData?.orbital_data ? {
+          orbit_id: displayScenario.nasaData.orbital_data.orbit_id,
+          orbit_determination_date: displayScenario.nasaData.orbital_data.orbit_determination_date,
+          first_observation_date: displayScenario.nasaData.orbital_data.first_observation_date,
+          last_observation_date: displayScenario.nasaData.orbital_data.last_observation_date,
+          data_arc_in_days: displayScenario.nasaData.orbital_data.data_arc_in_days,
+          observations_used: displayScenario.nasaData.orbital_data.observations_used,
+          orbit_uncertainty: displayScenario.nasaData.orbital_data.orbit_uncertainty,
+          minimum_orbit_intersection: displayScenario.nasaData.orbital_data.minimum_orbit_intersection,
+          jupiter_tisserand_invariant: displayScenario.nasaData.orbital_data.jupiter_tisserand_invariant,
+          epoch_osculation: displayScenario.nasaData.orbital_data.epoch_osculation,
+          eccentricity: displayScenario.nasaData.orbital_data.eccentricity,
+          semi_major_axis: displayScenario.nasaData.orbital_data.semi_major_axis,
+          inclination: displayScenario.nasaData.orbital_data.inclination,
+          ascending_node_longitude: displayScenario.nasaData.orbital_data.ascending_node_longitude,
+          orbital_period: displayScenario.nasaData.orbital_data.orbital_period,
+          perihelion_distance: displayScenario.nasaData.orbital_data.perihelion_distance,
+          perihelion_argument: displayScenario.nasaData.orbital_data.perihelion_argument,
+          aphelion_distance: displayScenario.nasaData.orbital_data.aphelion_distance,
+          perihelion_time: displayScenario.nasaData.orbital_data.perihelion_time,
+          mean_anomaly: displayScenario.nasaData.orbital_data.mean_anomaly,
+          mean_motion: displayScenario.nasaData.orbital_data.mean_motion,
+          equinox: displayScenario.nasaData.orbital_data.equinox,
+          orbit_class: {
+            orbit_class_type: displayScenario.nasaData.orbital_data.orbit_class.orbit_class_type,
+            orbit_class_description: displayScenario.nasaData.orbital_data.orbit_class.orbit_class_description,
+            orbit_class_range: displayScenario.nasaData.orbital_data.orbit_class.orbit_class_range
+          }
+        } : displayScenario.orbitalData;
+
+        return orbitalData && (
+          <div className="space-y-4 mb-6">
+            <h3 className="text-lg font-semibold text-purple-400">Orbital Mechanics Data</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Orbit Class:</span>
+                <span className="text-purple-400 font-semibold">{orbitalData.orbit_class?.orbit_class_type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Orbit Description:</span>
+                <span className="text-purple-300 text-xs">{orbitalData.orbit_class?.orbit_class_description}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Eccentricity:</span>
+                <span className="text-blue-400">{parseFloat(orbitalData.eccentricity).toFixed(4)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Semi-Major Axis:</span>
+                <span className="text-blue-400">{parseFloat(orbitalData.semi_major_axis).toFixed(4)} AU</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Inclination:</span>
+                <span className="text-blue-400">{parseFloat(orbitalData.inclination).toFixed(2)}°</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Orbital Period:</span>
+                <span className="text-blue-400">{parseFloat(orbitalData.orbital_period).toFixed(1)} days</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Perihelion Distance:</span>
+                <span className="text-green-400">{parseFloat(orbitalData.perihelion_distance).toFixed(4)} AU</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Aphelion Distance:</span>
+                <span className="text-red-400">{parseFloat(orbitalData.aphelion_distance).toFixed(4)} AU</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Orbit Uncertainty:</span>
+                <span className={orbitalData.orbit_uncertainty === '0' ? 'text-green-400' : 'text-yellow-400'}>
+                  {orbitalData.orbit_uncertainty === '0' ? 'Well-determined' : `Uncertainty: ${orbitalData.orbit_uncertainty}`}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Observations Used:</span>
+                <span className="text-gray-300">{orbitalData.observations_used}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Data Arc:</span>
+                <span className="text-gray-300">{orbitalData.data_arc_in_days} days</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Simulated Impact Data */}
       <div className="space-y-4 mb-6">
         <h3 className="text-lg font-semibold text-orange-400">Simulated Impact Data</h3>
@@ -216,10 +337,6 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
           <div className="flex justify-between">
             <span className="text-gray-400">Crater Size:</span>
             <span className="text-orange-400">{displayScenario.craterSize}km</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Estimated Casualties:</span>
-            <span className="text-red-400">{displayScenario.casualties.toLocaleString()}</span>
           </div>
           {displayScenario.trajectory && (
             <>
@@ -248,17 +365,17 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
             <div className="bg-red-900/20 p-3 rounded border-l-4 border-red-500">
               <div className="font-semibold text-red-400">Immediate Blast Zone</div>
               <div className="text-gray-300">
-                {displayScenario.consequences.immediateBlast.radius}km radius - {displayScenario.consequences.immediateBlast.fatalities.toLocaleString()} fatalities
+                {displayScenario.consequences.immediateBlast.radius}km radius
               </div>
             </div>
-            
+
             <div className="bg-orange-900/20 p-3 rounded border-l-4 border-orange-500">
               <div className="font-semibold text-orange-400">Thermal Radiation Zone</div>
               <div className="text-gray-300">
-                {displayScenario.consequences.thermalRadiation.radius}km radius - {displayScenario.consequences.thermalRadiation.fatalities.toLocaleString()} fatalities
+                {displayScenario.consequences.thermalRadiation.radius}km radius
               </div>
             </div>
-            
+
             <div className="bg-yellow-900/20 p-3 rounded border-l-4 border-yellow-500">
               <div className="font-semibold text-yellow-400">Seismic Effects</div>
               <div className="text-gray-300">
@@ -353,9 +470,9 @@ export default function AsteroidDetailsPanel({ scenario, onClose }: AsteroidDeta
       {/* NASA JPL Database Link */}
       {displayScenario.nasaData?.nasa_jpl_url && (
         <div className="mt-4 pt-4 border-t border-gray-700">
-          <a 
-            href={displayScenario.nasaData.nasa_jpl_url} 
-            target="_blank" 
+          <a
+            href={displayScenario.nasaData.nasa_jpl_url}
+            target="_blank"
             rel="noopener noreferrer"
             className="text-blue-400 hover:text-blue-300 underline text-sm flex items-center"
           >

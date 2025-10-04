@@ -1,5 +1,6 @@
 import { ImpactScenario } from '../types/asteroid';
 import { trajectoryCalculator } from './trajectoryCalculator';
+import { NASAObject } from './nasaApi';
 
 export interface City {
   lat: number;
@@ -8,7 +9,7 @@ export interface City {
 }
 
 export function recalculateImpactForCity(
-  originalScenario: ImpactScenario, 
+  originalScenario: ImpactScenario,
   targetCity: City
 ): ImpactScenario {
   if (!originalScenario.nasaData) {
@@ -30,7 +31,7 @@ export function recalculateImpactForCity(
 }
 
 export function calculateImpactConsequencesForCity(
-  nasaData: any,
+  nasaData: NASAObject,
   targetCity: City
 ): ImpactScenario {
   return trajectoryCalculator.convertToImpactScenario(nasaData, targetCity);

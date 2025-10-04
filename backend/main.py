@@ -5,16 +5,16 @@ import uvicorn
 from dotenv import load_dotenv
 import os
 import requests
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 api_key = os.getenv('API_KEY')
 
 app = FastAPI()
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
