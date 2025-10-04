@@ -99,13 +99,43 @@ class NASAApiService {
   private baseUrl = 'http://localhost:8000'; // Call backend directly
   private nasaApiKey = process.env.NEXT_PUBLIC_NASA_API_KEY || 'DEMO_KEY';
 
+  // Use local JSON files instead of API calls
+  private useLocalData = true;
+
   async getNearEarthObjects(startDate: string, endDate: string): Promise<NASAAPIResponse> {
     try {
+      if (this.useLocalData) {
+        console.log('📁 Using local feed.json data instead of API call');
+        console.log('📅 Requested date range:', startDate, 'to', endDate);
+
+        // Load the local feed.json file
+        const response = await fetch('/feed.json');
+        if (!response.ok) {
+          throw new Error(`Failed to load feed.json: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Local feed.json loaded successfully!');
+        console.log('📊 Feed data:', JSON.stringify(data, null, 2));
+        console.log('📈 Element count:', data.element_count);
+
+        if (data.near_earth_objects) {
+          const dates = Object.keys(data.near_earth_objects);
+          console.log('📅 Available dates:', dates);
+          dates.forEach(date => {
+            console.log(`🪨 Asteroids for ${date}:`, data.near_earth_objects[date].length);
+          });
+        }
+
+        return data;
+      }
+
+      // Original API call logic (kept as fallback)
       const url = `${this.baseUrl}/neo_data_all/?start_date=${startDate}&end_date=${endDate}`;
       console.log('Fetching NASA data directly from backend:', url);
       console.log('Calling backend directly at localhost:8000');
-      console.log('⏱️ Request timeout set to 5 minutes (300 seconds)'); 
-      
+      console.log('⏱️ Request timeout set to 5 minutes (300 seconds)');
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -115,9 +145,9 @@ class NASAApiService {
         // Add timeout to prevent hanging
         signal: AbortSignal.timeout(300000) // 5 minute timeout
       });
-      
+
       console.log('Local API response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Local API error response:', errorText);
@@ -127,7 +157,7 @@ class NASAApiService {
           url: url,
           headers: Object.fromEntries(response.headers.entries())
         });
-        
+
         // Check for specific error types
         if (errorText.includes('API_KEY_INVALID')) {
           throw new Error('NASA API key is invalid. Please check your backend configuration.');
@@ -138,10 +168,10 @@ class NASAApiService {
         } else if (response.status === 400) {
           throw new Error(`Bad request (400): ${errorText}. Please check the request parameters.`);
         }
-        
+
         throw new Error(`Backend API error: ${response.status} - ${errorText}`);
       }
-      
+
       const data = await response.json();
       console.log('✅ Local API response received successfully!');
       console.log('📊 Response data:', JSON.stringify(data, null, 2));
@@ -158,28 +188,58 @@ class NASAApiService {
       }
       return data;
     } catch (error) {
-      console.error('Error fetching NASA data from local API:', error);
-      
+      console.error('Error fetching NASA data:', error);
+
       // If it's a network error (backend not running), provide helpful message
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Cannot connect to backend API at localhost:8000. Please ensure your backend server is running.');
       }
-      
+
       // If it's a timeout error
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request to backend API timed out after 5 minutes. Please check if your backend is responding.');
       }
-      
+
       throw error;
     }
   }
 
   async getAsteroidDetails(asteroidId: string): Promise<any> {
     try {
+      if (this.useLocalData) {
+        console.log('📁 Using local one-asteroid.json data instead of API call');
+        console.log('🪨 Requested asteroid ID:', asteroidId);
+
+        // Load the local one-asteroid.json file
+        const response = await fetch('/one-asteroid.json');
+        if (!response.ok) {
+          throw new Error(`Failed to load one-asteroid.json: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Local one-asteroid.json loaded successfully!');
+        console.log('🪨 Asteroid ID:', data.id);
+        console.log('📊 Asteroid data:', JSON.stringify(data, null, 2));
+        console.log('🏷️ Asteroid name:', data.name);
+        console.log('⚠️ Potentially hazardous:', data.is_potentially_hazardous_asteroid);
+        console.log('📏 Diameter range:', data.estimated_diameter?.meters ?
+          `${data.estimated_diameter.meters.estimated_diameter_min.toFixed(0)}-${data.estimated_diameter.meters.estimated_diameter_max.toFixed(0)}m` : 'N/A');
+        console.log('🌟 Absolute magnitude:', data.absolute_magnitude_h);
+        if (data.close_approach_data && data.close_approach_data.length > 0) {
+          console.log('🚀 Close approach data:', JSON.stringify(data.close_approach_data[0], null, 2));
+        }
+        if (data.orbital_data) {
+          console.log('🛰️ Orbital data:', JSON.stringify(data.orbital_data, null, 2));
+        }
+
+        return data;
+      }
+
+      // Original API call logic (kept as fallback)
       const url = `${this.baseUrl}/neo_data_one/${asteroidId}`;
       console.log('Fetching asteroid details directly from backend:', url);
       console.log('⏱️ Request timeout set to 5 minutes (300 seconds)');
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -188,9 +248,9 @@ class NASAApiService {
         },
         signal: AbortSignal.timeout(300000) // 5 minute timeout
       });
-      
+
       console.log('Local API response:', response);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Local API error response:', errorText);
@@ -200,7 +260,7 @@ class NASAApiService {
           url: url,
           headers: Object.fromEntries(response.headers.entries())
         });
-        
+
         // Check for specific error types
         if (errorText.includes('API_KEY_INVALID')) {
           throw new Error('NASA API key is invalid. Please check your backend configuration.');
@@ -211,17 +271,17 @@ class NASAApiService {
         } else if (response.status === 400) {
           throw new Error(`Bad request (400): ${errorText}. Please check the request parameters.`);
         }
-        
+
         throw new Error(`Backend API error: ${response.status} - ${errorText}`);
       }
-      
+
       const data = await response.json();
       console.log('✅ Asteroid details response received successfully!');
       console.log('🪨 Asteroid ID:', asteroidId);
       console.log('📊 Asteroid data:', JSON.stringify(data, null, 2));
       console.log('🏷️ Asteroid name:', data.name);
       console.log('⚠️ Potentially hazardous:', data.is_potentially_hazardous_asteroid);
-      console.log('📏 Diameter range:', data.estimated_diameter?.meters ? 
+      console.log('📏 Diameter range:', data.estimated_diameter?.meters ?
         `${data.estimated_diameter.meters.estimated_diameter_min.toFixed(0)}-${data.estimated_diameter.meters.estimated_diameter_max.toFixed(0)}m` : 'N/A');
       console.log('🌟 Absolute magnitude:', data.absolute_magnitude_h);
       if (data.close_approach_data && data.close_approach_data.length > 0) {
@@ -229,50 +289,21 @@ class NASAApiService {
       }
       return data;
     } catch (error) {
-      console.error('Error fetching asteroid details from local API:', error);
-      
+      console.error('Error fetching asteroid details:', error);
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Cannot connect to local backend API at localhost:8000. Please ensure your backend server is running.');
       }
-      
+
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request to local API timed out. Please check if your backend is responding.');
       }
-      
+
       throw error;
     }
   }
 
-  // Test backend health
-  async testBackendHealth(): Promise<boolean> {
-    try {
-      console.log('🏥 Testing backend health...');
-      const healthUrl = `${this.baseUrl}/health`; // Try health endpoint
-      console.log('🔗 Health check URL:', healthUrl);
-      
-      const response = await fetch(healthUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(10000) // 10 second timeout for health check
-      });
-      
-      console.log('🏥 Backend health status:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Backend is healthy:', data);
-        return true;
-      } else {
-        console.log('⚠️ Backend health check failed:', response.status);
-        return false;
-      }
-    } catch (error) {
-      console.log('❌ Backend health check failed:', error);
-      return false;
-    }
-  }
+  // Health check removed - using local JSON files
 
   // Test local API with a known working date
   async testNASAAPI(): Promise<boolean> {
@@ -281,7 +312,7 @@ class NASAApiService {
       const testDate = '2015-09-08';
       console.log('🧪 Testing local API with date:', testDate);
       console.log('🔗 Testing URL:', `${this.baseUrl}/neo_data_all/?start_date=${testDate}&end_date=${testDate}`);
-      
+
       const response = await this.getNearEarthObjects(testDate, testDate);
       console.log('✅ Local API test successful!');
       console.log('📊 Test results:');
@@ -316,7 +347,7 @@ class NASAApiService {
   // Get asteroids for custom date range
   async getAsteroidsForDateRange(startDate: string, endDate: string): Promise<NASAAPIResponse> {
     console.log('📅 Requesting NASA data for custom date range:', startDate, 'to', endDate);
-    
+
     try {
       const response = await this.getNearEarthObjects(startDate, endDate);
       console.log('✅ Custom date range request successful!');
@@ -343,16 +374,16 @@ class NASAApiService {
     // Get the current week
     const startDate = new Date(today);
     const endDate = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
+
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
-    
+
     console.log('📅 Getting current week asteroids:');
     console.log('  - Today:', today.toISOString().split('T')[0]);
     console.log('  - Start date:', startDateStr);
     console.log('  - End date:', endDateStr);
     console.log('  - Date range:', `${startDateStr} to ${endDateStr}`);
-    
+
     const response = await this.getAsteroidsForDateRange(startDateStr, endDateStr);
     console.log('✅ Current week asteroids loaded successfully!');
     return response;
@@ -361,10 +392,26 @@ class NASAApiService {
   // Get asteroids per object (alternative endpoint) - returns orbital data
   async getAsteroidsPerObject(startDate: string, endDate: string): Promise<OrbitalDataResponse> {
     try {
+      if (this.useLocalData) {
+        console.log('📁 Using local data - returning empty orbital data response');
+        console.log('📅 Requested date range:', startDate, 'to', endDate);
+
+        // Return empty orbital data since we're only showing one asteroid
+        // The orbital data will come from the one-asteroid.json file
+        const emptyData: OrbitalDataResponse = {};
+        console.log('✅ Empty orbital data response created');
+        console.log('📊 Orbital data structure:', typeof emptyData);
+        console.log('🔑 Asteroid names with orbital data:', Object.keys(emptyData));
+        console.log('📈 Number of asteroids with orbital data:', Object.keys(emptyData).length);
+
+        return emptyData;
+      }
+
+      // Original API call logic (kept as fallback)
       const url = `${this.baseUrl}/neo_data_per_object/?start_date=${startDate}&end_date=${endDate}`;
       console.log('Fetching asteroids per object directly from backend:', url);
       console.log('⏱️ Request timeout set to 5 minutes (300 seconds)');
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -373,9 +420,9 @@ class NASAApiService {
         },
         signal: AbortSignal.timeout(300000) // 5 minute timeout
       });
-      
+
       console.log('Local API response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Local API error response:', errorText);
@@ -385,7 +432,7 @@ class NASAApiService {
           url: url,
           headers: Object.fromEntries(response.headers.entries())
         });
-        
+
         // Check for specific error types
         if (errorText.includes('API_KEY_INVALID')) {
           throw new Error('NASA API key is invalid. Please check your backend configuration.');
@@ -396,16 +443,16 @@ class NASAApiService {
         } else if (response.status === 400) {
           throw new Error(`Bad request (400): ${errorText}. Please check the request parameters.`);
         }
-        
+
         throw new Error(`Backend API error: ${response.status} - ${errorText}`);
       }
-      
+
       const data = await response.json();
       console.log('✅ Orbital data response received successfully!');
       console.log('📊 Orbital data structure:', typeof data);
       console.log('🔑 Asteroid names with orbital data:', Object.keys(data));
       console.log('📈 Number of asteroids with orbital data:', Object.keys(data).length);
-      
+
       if (Object.keys(data).length > 0) {
         const firstAsteroidName = Object.keys(data)[0];
         const firstOrbitalData = data[firstAsteroidName];
@@ -423,19 +470,19 @@ class NASAApiService {
         });
         console.log('🔍 Full orbital data sample:', JSON.stringify(firstOrbitalData, null, 2));
       }
-      
+
       return data;
     } catch (error) {
-      console.error('Error fetching asteroids per object from local API:', error);
-      
+      console.error('Error fetching asteroids per object:', error);
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Cannot connect to local backend API at localhost:8000. Please ensure your backend server is running.');
       }
-      
+
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request to local API timed out. Please check if your backend is responding.');
       }
-      
+
       throw error;
     }
   }
@@ -448,14 +495,14 @@ class NASAApiService {
     console.log('🔄 Fetching comprehensive asteroid data...');
     console.log('📅 Date range:', startDate, 'to', endDate);
     console.log('⏱️ Request timeout set to 5 minutes (300 seconds) for each API call');
-    
+
     try {
       // Fetch both datasets in parallel
       const [standardData, orbitalData] = await Promise.all([
         this.getNearEarthObjects(startDate, endDate),
         this.getAsteroidsPerObject(startDate, endDate)
       ]);
-      
+
       console.log('✅ Comprehensive data fetched successfully!');
       console.log('📊 Standard data:', {
         element_count: standardData.element_count,
@@ -465,7 +512,7 @@ class NASAApiService {
         asteroid_count: Object.keys(orbitalData).length,
         asteroid_names: Object.keys(orbitalData)
       });
-      
+
       return {
         standardData,
         orbitalData
