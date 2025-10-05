@@ -160,6 +160,8 @@ export default function SolarSystemContent({
           asteroidPosition={impactPrediction.closestApproachPositions.asteroid}
           closestApproachDate={impactPrediction.closestApproachDate}
           visible={true}
+          currentJulianDate={timeState.julianDate}
+          asteroidElements={editingAsteroid.orbitalElements}
         />
       )}
       
