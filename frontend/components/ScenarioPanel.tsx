@@ -3,7 +3,6 @@ import { useState, useMemo } from 'react';
 import { useAsteroidStore, SortOption, FilterOption } from '@/lib/stores/useAsteroidStore';
 import { ImpactScenario } from '@/lib/types/asteroid';
 import DatePicker from './DatePicker';
-import CitySelector from './CitySelector';
 import { sortAsteroids, filterAsteroids, getThreatLevel, getThreatColor, formatDistance, formatEnergy } from '@/lib/utils/asteroidUtils';
 import { recalculateImpactForCity } from '@/lib/services/impactCalculator';
 import { getEnergyColor } from '@/lib/utils/asteroidColors';
@@ -26,10 +25,8 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
     selectAsteroidDetails,
     sortOption,
     filterOption,
-    selectedCity,
     setSortOption,
     setFilterOption,
-    setSelectedCity
   } = useAsteroidStore();
   const [isExpanded, setIsExpanded] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -87,13 +84,6 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
               </div>
             )}
 
-            {/* City Selector */}
-            <div className="p-4 border-b border-gray-700/50">
-              <CitySelector
-                selectedCity={selectedCity}
-                onCitySelect={setSelectedCity}
-              />
-            </div>
 
             {/* Filter Controls */}
             <div className="p-4 border-b border-gray-700/50 space-y-4">
@@ -264,11 +254,6 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
                   <div className="p-3 bg-gray-800 rounded">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold">Impact Analysis</h4>
-                      {selectedCity && (
-                        <span className="text-xs px-2 py-1 bg-blue-600 text-white rounded">
-                          📍 {selectedCity.name}
-                        </span>
-                      )}
                     </div>
                     {selectedScenario.consequences && (
                       <div className="space-y-2 text-xs">
@@ -358,18 +343,6 @@ export default function ScenarioPanel({ scenarios, onScenarioSelect, onFocus, on
                       </button>
                     </div>
 
-                    {selectedCity && (
-                      <button
-                        onClick={() => {
-                          const recalculatedScenario = recalculateImpactForCity(selectedScenario, selectedCity);
-                          onScenarioSelect(recalculatedScenario);
-                          selectAsteroidDetails(recalculatedScenario);
-                        }}
-                        className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold transition-colors"
-                      >
-                        🔄 Recalculate for {selectedCity.name}
-                      </button>
-                    )}
                   </div>
                 </div>
               )}

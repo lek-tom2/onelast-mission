@@ -243,8 +243,8 @@ function SceneContent({
       console.log('SceneContent: Moving camera to city:', city);
 
       // Convert lat/lng to 3D position using the same method as the pin
-      const phi = (90 - city.lat) * (Math.PI / 180);
-      const theta = (city.lng + 180) * (Math.PI / 180);
+      const latRad = (city.lat * Math.PI) / 180;
+      const lngRad = (-city.lng * Math.PI) / 180; // Flip longitude (multiply by -1)
 
       // Animate camera to city position
       const startPosition = camera.position.clone();
@@ -260,11 +260,12 @@ function SceneContent({
         const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         const easedProgress = easeInOutCubic(progress);
 
-        // Calculate city position using the same method as the pin
+        // Calculate city position using the same method as the pin (radius 1.02)
+        const radius = 1.02;
         const cityPosition = new THREE.Vector3(
-          -Math.sin(phi) * Math.cos(theta),
-          Math.cos(phi),
-          Math.sin(phi) * Math.sin(theta)
+          radius * Math.cos(latRad) * Math.cos(lngRad),
+          radius * Math.sin(latRad),
+          radius * Math.cos(latRad) * Math.sin(lngRad)
         );
 
         // Calculate camera position (at distance from city)
@@ -281,7 +282,7 @@ function SceneContent({
           requestAnimationFrame(animateCamera);
         } else {
           // After animation, start following Earth's rotation
-          startCameraFollow(city, phi, theta);
+          startCameraFollow(city, latRad, lngRad);
         }
       };
 
@@ -289,17 +290,18 @@ function SceneContent({
     };
 
     // Function to make camera follow Earth's rotation
-    const startCameraFollow = (city: { lat: number; lng: number; name: string; country: string; region: string; density: number }, phi: number, theta: number) => {
+    const startCameraFollow = (city: { lat: number; lng: number; name: string; country: string; region: string; density: number }, latRad: number, lngRad: number) => {
       let isFollowing = true;
 
       const followEarth = () => {
         if (!isFollowing) return;
 
-        // Calculate city position using the same method as the pin
+        // Calculate city position using the same method as the pin (radius 1.02)
+        const radius = 1.02;
         const cityPosition = new THREE.Vector3(
-          -Math.sin(phi) * Math.cos(theta),
-          Math.cos(phi),
-          Math.sin(phi) * Math.sin(theta)
+          radius * Math.cos(latRad) * Math.cos(lngRad),
+          radius * Math.sin(latRad),
+          radius * Math.cos(latRad) * Math.sin(lngRad)
         );
 
         // Update camera to always look at the city (which rotates with Earth)

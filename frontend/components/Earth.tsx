@@ -38,15 +38,17 @@ const vector3ToLatLng = (vector: THREE.Vector3) => {
     return { lat, lng };
 };
 
-// Convert lat/lng coordinates to 3D vector
+// Convert lat/lng coordinates to 3D vector (basic approach with longitude flip)
 const latLngToVector3 = (lat: number, lng: number, radius: number = 1.02): THREE.Vector3 => {
-    const phi = (90 - lat) * (Math.PI / 180);
-    const theta = (lng + 180) * (Math.PI / 180);
+    // Convert to radians
+    const latRad = (lat * Math.PI) / 180;
+    const lngRad = (-lng * Math.PI) / 180; // Flip longitude (multiply by -1)
 
+    // Basic spherical to Cartesian conversion
     return new THREE.Vector3(
-        -radius * Math.sin(phi) * Math.cos(theta),
-        radius * Math.cos(phi),
-        radius * Math.sin(phi) * Math.sin(theta)
+        radius * Math.cos(latRad) * Math.cos(lngRad),
+        radius * Math.sin(latRad),
+        radius * Math.cos(latRad) * Math.sin(lngRad)
     );
 };
 
@@ -82,6 +84,21 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
         setLocalImpactPosition(null);
         onImpactPointChange?.(null);
     }, [selectedAsteroidDetails, onImpactPointChange]);
+
+    // Listen for clear impact visualization events
+    useEffect(() => {
+        const handleClearImpact = () => {
+            console.log('Earth: Clearing impact visualization');
+            setImpactPosition(null);
+            setLocalImpactPosition(null);
+            onImpactPointChange?.(null);
+        };
+
+        window.addEventListener('clearImpactVisualization', handleClearImpact);
+        return () => {
+            window.removeEventListener('clearImpactVisualization', handleClearImpact);
+        };
+    }, [onImpactPointChange]);
 
     // Notify parent when impact point changes
     useEffect(() => {

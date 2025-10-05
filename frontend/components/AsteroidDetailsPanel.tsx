@@ -49,13 +49,14 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
   // Create impact point at city location
   const createImpactPointAtCity = (city: { lat: number; lng: number; name: string }) => {
     console.log('AsteroidDetailsPanel: Creating impact point at city:', city);
-    // Convert lat/lng to 3D position using the same method as the pin
-    const phi = (90 - city.lat) * (Math.PI / 180);
-    const theta = (city.lng + 180) * (Math.PI / 180);
+    // Convert lat/lng to 3D position using the same method as the pin (radius 1.02)
+    const latRad = ((city.lat) * Math.PI) / 180;
+    const lngRad = ((-city.lng) * Math.PI) / 180; // Flip longitude (multiply by -1)
+    const radius = 1.02;
     const cityPosition = new THREE.Vector3(
-      -Math.sin(phi) * Math.cos(theta),
-      Math.cos(phi),
-      Math.sin(phi) * Math.sin(theta)
+      radius * Math.cos(latRad) * Math.cos(lngRad),
+      radius * Math.sin(latRad),
+      radius * Math.cos(latRad) * Math.sin(lngRad)
     );
 
     // Dispatch event to create impact point
@@ -161,6 +162,11 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
               console.log('AsteroidDetailsPanel: City selected:', city);
               setSelectedCity(city);
               setStoreSelectedCity(city); // Update store for city pin
+
+              // Clear any existing impact visualization first
+              const clearEvent = new CustomEvent('clearImpactVisualization');
+              window.dispatchEvent(clearEvent);
+
               if (city) {
                 const recalculated = recalculateImpactForCity(scenario, city);
                 setCalculatedScenario(recalculated);
