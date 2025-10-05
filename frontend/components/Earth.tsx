@@ -31,10 +31,11 @@ const calculateImpactConsequences = (asteroid: ImpactScenario, lat: number, lng:
         isWaterImpact
     };
 };
-// Simple coordinate conversion
+// Coordinate conversion that accounts for the same offsets used in latLngToVector3
 const vector3ToLatLng = (vector: THREE.Vector3) => {
-    const lat = Math.asin(vector.y) * (180 / Math.PI);
-    const lng = Math.atan2(vector.z, vector.x) * (180 / Math.PI);
+    // Convert 3D position back to lat/lng, accounting for the offsets used in latLngToVector3
+    const lat = Math.asin(vector.y) * (180 / Math.PI) - 1.5; // Subtract 1.5 degrees offset
+    const lng = -Math.atan2(vector.z, vector.x) * (180 / Math.PI) - 0.25; // Flip longitude and subtract 0.25 degrees offset
     return { lat, lng };
 };
 
@@ -95,9 +96,18 @@ export default function Earth({ onScenarioSelect, onImpactPointChange, showPin =
             onImpactPointChange?.(null);
         };
 
+        const handleSetImpactPoint = (event: CustomEvent) => {
+            const { position, city } = event.detail;
+            console.log('Earth: Setting impact point from event:', position, 'for city:', city);
+            setImpactPosition(position);
+            setLocalImpactPosition(position);
+        };
+
         window.addEventListener('clearImpactVisualization', handleClearImpact);
+        window.addEventListener('setImpactPoint', handleSetImpactPoint as EventListener);
         return () => {
             window.removeEventListener('clearImpactVisualization', handleClearImpact);
+            window.removeEventListener('setImpactPoint', handleSetImpactPoint as EventListener);
         };
     }, [onImpactPointChange]);
 
@@ -547,19 +557,7 @@ function CityPin({ city }: { city: City }) {
 
     return (
         <group position={cityPosition}>
-            {/* Pin Base */}
-            <mesh>
-                <cylinderGeometry args={[0.01, 0.01, 0.05, 8]} />
-                <meshBasicMaterial color="#ff4444" />
-            </mesh>
-
-            {/* Pin Head */}
-            <mesh position={[0, 0.03, 0]}>
-                <sphereGeometry args={[0.015, 8, 8]} />
-                <meshBasicMaterial color="#ff0000" />
-            </mesh>
-
-            {/* Pin Label */}
+            {/* Pin Label - No visual pin, just text */}
             <Text
                 position={[0.05, 0.05, 0]}
                 fontSize={0.03}
