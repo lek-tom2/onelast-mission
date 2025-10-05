@@ -16,6 +16,182 @@ import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import toast, { Toaster } from 'react-hot-toast';
 
+// Mini-Game Results Modal Component
+function MiniGameResultsModal({ 
+  asteroid, 
+  impactScenario, 
+  onClose 
+}: {
+  asteroid: { name: string; size: number; energy: number; velocity: number };
+  impactScenario: ImpactScenario;
+  onClose: () => void;
+}) {
+  // Calculate detailed consequences
+  const consequences = useMemo(() => {
+    const energy = asteroid.energy; // megatons
+    const asteroidSize = asteroid.size; // meters
+    
+    // Base calculations
+    const craterDiameter = Math.pow(energy, 0.25) * 2; // km
+    const blastRadius = Math.pow(energy, 0.33) * 5; // km
+    const thermalRadius = Math.pow(energy, 0.4) * 8; // km
+    
+    // Population impact (simplified)
+    const populationDensity = 1000; // people per km²
+    const blastCasualties = Math.floor(Math.PI * Math.pow(blastRadius, 2) * populationDensity * 0.9);
+    const thermalCasualties = Math.floor(Math.PI * Math.pow(thermalRadius, 2) * populationDensity * 0.3);
+    const totalCasualties = blastCasualties + thermalCasualties;
+    
+    // Environmental effects
+    const magnitude = Math.min(9.5, 5.0 + Math.log10(energy));
+    const tsunamiHeight = energy > 100 ? Math.pow(energy / 100, 0.5) * 20 : 0;
+    
+    return {
+      crater: { diameter: craterDiameter, depth: craterDiameter * 0.2 },
+      blast: { radius: blastRadius, casualties: blastCasualties },
+      thermal: { radius: thermalRadius, casualties: thermalCasualties },
+      total: { casualties: totalCasualties, economicDamage: totalCasualties * 50000 },
+      seismic: { magnitude: magnitude, radius: magnitude * 100 },
+      tsunami: { height: tsunamiHeight, affected: tsunamiHeight > 0 },
+      atmosphere: {
+        dustCloud: energy > 10,
+        climateImpact: energy > 100,
+        nuclearWinter: energy > 1000
+      }
+    };
+  }, [asteroid, impactScenario]);
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div className="bg-gray-900 p-8 rounded-xl border-2 border-red-500 max-w-4xl max-h-[80vh] overflow-y-auto">
+        <div className="text-center mb-6">
+          <h2 className="text-4xl font-bold text-red-400 mb-2">💥 MISSION COMPLETE</h2>
+          <h3 className="text-2xl text-white">{asteroid.name} Impact</h3>
+          <p className="text-gray-400">
+            Target: {impactScenario.city} • Size: {asteroid.size}m • Energy: {asteroid.energy} MT
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Immediate Effects */}
+          <div className="bg-red-900/30 p-4 rounded-lg">
+            <h4 className="text-xl font-bold text-red-400 mb-3">🔥 Immediate Effects</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Crater Diameter:</span>
+                <span className="text-red-300">{consequences.crater.diameter.toFixed(1)} km</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Crater Depth:</span>
+                <span className="text-red-300">{consequences.crater.depth.toFixed(1)} km</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Blast Radius:</span>
+                <span className="text-orange-300">{consequences.blast.radius.toFixed(1)} km</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Thermal Radius:</span>
+                <span className="text-yellow-300">{consequences.thermal.radius.toFixed(1)} km</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Casualties */}
+          <div className="bg-orange-900/30 p-4 rounded-lg">
+            <h4 className="text-xl font-bold text-orange-400 mb-3">💀 Human Impact</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Blast Casualties:</span>
+                <span className="text-red-300">{consequences.blast.casualties.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Thermal Casualties:</span>
+                <span className="text-orange-300">{consequences.thermal.casualties.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between font-bold border-t border-gray-600 pt-2">
+                <span>Total Casualties:</span>
+                <span className="text-red-400">{consequences.total.casualties.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Economic Damage:</span>
+                <span className="text-yellow-300">${(consequences.total.economicDamage / 1e9).toFixed(1)}B</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Environmental */}
+          <div className="bg-green-900/30 p-4 rounded-lg">
+            <h4 className="text-xl font-bold text-green-400 mb-3">🌍 Environmental</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Earthquake Magnitude:</span>
+                <span className="text-yellow-300">{consequences.seismic.magnitude.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Seismic Radius:</span>
+                <span className="text-orange-300">{consequences.seismic.radius.toFixed(0)} km</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Dust Cloud:</span>
+                <span className={consequences.atmosphere.dustCloud ? 'text-red-300' : 'text-green-300'}>
+                  {consequences.atmosphere.dustCloud ? 'Massive' : 'Minimal'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Climate Impact:</span>
+                <span className={consequences.atmosphere.climateImpact ? 'text-red-300' : 'text-green-300'}>
+                  {consequences.atmosphere.climateImpact ? 'Severe' : 'Localized'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary Effects */}
+          <div className="bg-blue-900/30 p-4 rounded-lg">
+            <h4 className="text-xl font-bold text-blue-400 mb-3">🌊 Secondary Effects</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Tsunami Risk:</span>
+                <span className={consequences.tsunami.affected ? 'text-red-300' : 'text-green-300'}>
+                  {consequences.tsunami.affected ? 'High' : 'Low'}
+                </span>
+              </div>
+              {consequences.tsunami.affected && (
+                <div className="flex justify-between">
+                  <span>Wave Height:</span>
+                  <span className="text-blue-300">{consequences.tsunami.height.toFixed(1)} m</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>Nuclear Winter:</span>
+                <span className={consequences.atmosphere.nuclearWinter ? 'text-red-300' : 'text-green-300'}>
+                  {consequences.atmosphere.nuclearWinter ? 'Possible' : 'Unlikely'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Global Impact:</span>
+                <span className="text-yellow-300">
+                  {asteroid.energy > 1000 ? 'Extinction Event' : 
+                   asteroid.energy > 100 ? 'Regional Catastrophe' : 'Local Disaster'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 text-center">
+          <button 
+            onClick={onClose}
+            className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-lg font-bold"
+          >
+            Return to Solar System
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Impact Explosion Component
 function ImpactExplosion({ asteroid, impactPoint }: { asteroid: ImpactScenario; impactPoint?: THREE.Vector3 }) {
   const groupRef = useRef<THREE.Group>(null);
@@ -233,11 +409,13 @@ function CameraController() {
 function SceneContent({
   launchingAsteroid,
   setLaunchingAsteroid,
-  setLaunchHandler
+  setLaunchHandler,
+  onMiniGameImpact
 }: {
   launchingAsteroid: ImpactScenario | null;
   setLaunchingAsteroid: (asteroid: ImpactScenario | null) => void;
   setLaunchHandler: (handler: (scenario: ImpactScenario) => void) => void;
+  onMiniGameImpact?: () => void;
 }) {
   const { camera, scene } = useThree();
   const [impactPoint, setImpactPoint] = useState<THREE.Vector3 | null>(null);
@@ -459,6 +637,7 @@ function SceneContent({
         onScenarioSelect={handleScenarioSelect}
         onImpactPointChange={setImpactPoint}
         showPin={showPin}
+        onMiniGameImpact={onMiniGameImpact}
       />
 
       {/* Asteroid Field (visible when zoomed out) */}
@@ -481,12 +660,21 @@ function SceneContent({
 }
 
 export default function SpaceScene() {
-  const { selectedAsteroidDetails, selectAsteroidDetails, showConsequences } = useAsteroidStore();
+  const { 
+    selectedAsteroidDetails, 
+    selectAsteroidDetails, 
+    showConsequences,
+    isMiniGameActive,
+    miniGameAsteroid,
+    deactivateMiniGame
+  } = useAsteroidStore();
   const [realScenarios, setRealScenarios] = useState<ImpactScenario[]>([]);
+  const [miniGameScenarios, setMiniGameScenarios] = useState<ImpactScenario[]>([]);
   const [loading, setLoading] = useState(true);
   const [launchingAsteroid, setLaunchingAsteroid] = useState<ImpactScenario | null>(null);
   const [launchHandler, setLaunchHandler] = useState<((scenario: ImpactScenario) => void) | null>(null);
   const [hasImpactPoint, setHasImpactPoint] = useState(false);
+  const [gameResultShown, setGameResultShown] = useState(false);
 
   // Load real NASA asteroid data
   useEffect(() => {
@@ -513,6 +701,32 @@ export default function SpaceScene() {
   useEffect(() => {
     setHasImpactPoint(!!(selectedAsteroidDetails && showConsequences));
   }, [selectedAsteroidDetails, showConsequences]);
+
+  // Create mini-game scenario when mini-game is active
+  useEffect(() => {
+    if (isMiniGameActive && miniGameAsteroid && !gameResultShown) {
+      console.log('🎮 Creating mini-game scenario for:', miniGameAsteroid.name);
+      
+      const miniGameScenario: ImpactScenario = {
+        id: `minigame-${miniGameAsteroid.name}`,
+        name: miniGameAsteroid.name,
+        position: { lat: 0, lng: 0 }, // Will be set by Earth click
+        city: 'Target Location',
+        asteroidSize: miniGameAsteroid.size,
+        energy: miniGameAsteroid.energy,
+        casualties: Math.floor(miniGameAsteroid.energy * 100000), // Rough estimate
+        tsunami: miniGameAsteroid.energy > 100,
+        blastRadius: Math.pow(miniGameAsteroid.energy, 0.33) * 5,
+        craterSize: Math.pow(miniGameAsteroid.energy, 0.25) * 2
+      };
+      
+      setMiniGameScenarios([miniGameScenario]);
+      setLoading(false);
+    } else if (!isMiniGameActive) {
+      setMiniGameScenarios([]);
+      setGameResultShown(false);
+    }
+  }, [isMiniGameActive, miniGameAsteroid, gameResultShown]);
 
   // Camera movement event listener - dispatch to SceneContent
   useEffect(() => {
@@ -567,6 +781,13 @@ export default function SpaceScene() {
     }
   };
 
+  // Handle mini-game impact results
+  const handleMiniGameImpact = () => {
+    if (isMiniGameActive) {
+      setGameResultShown(true);
+    }
+  };
+
   return (
     <div className="w-full h-screen bg-black">
       {/* 3D Scene - Full Screen */}
@@ -579,13 +800,14 @@ export default function SpaceScene() {
             launchingAsteroid={launchingAsteroid}
             setLaunchingAsteroid={setLaunchingAsteroid}
             setLaunchHandler={setLaunchHandler}
+            onMiniGameImpact={handleMiniGameImpact}
           />
         </Suspense>
       </Canvas>
 
       {/* Asteroid List Sidebar - Left Side (like Solar System view) */}
       <ScenarioPanel
-        scenarios={loading ? [] : realScenarios}
+        scenarios={loading ? [] : (isMiniGameActive ? miniGameScenarios : realScenarios)}
         onScenarioSelect={(scenario) => {
           useAsteroidStore.getState().selectScenario(scenario);
         }}
@@ -632,6 +854,24 @@ export default function SpaceScene() {
           },
         }}
       />
+
+      {/* Mini-Game Results Modal */}
+      {isMiniGameActive && miniGameAsteroid && gameResultShown && (
+        <MiniGameResultsModal 
+          asteroid={miniGameAsteroid}
+          impactScenario={miniGameScenarios[0] || {
+            city: 'Impact Zone',
+            country: 'Earth',
+            population: 1000000,
+            description: 'Direct impact',
+            coordinates: { latitude: 0, longitude: 0 }
+          }}
+          onClose={() => {
+            setGameResultShown(false);
+            deactivateMiniGame();
+          }}
+        />
+      )}
     </div>
   );
 }

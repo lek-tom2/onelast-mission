@@ -66,16 +66,17 @@ interface EarthProps {
     onScenarioSelect?: (scenario: ImpactScenario) => void;
     onImpactPointChange?: (point: THREE.Vector3 | null) => void;
     showPin?: boolean;
+    onMiniGameImpact?: () => void; // New prop for mini-game impact
 }
 
-export default function Earth({ onScenarioSelect, onImpactPointChange, showPin = true }: EarthProps) {
+export default function Earth({ onScenarioSelect, onImpactPointChange, showPin = true, onMiniGameImpact }: EarthProps) {
     const earthRef = useRef<THREE.Mesh>(null);
     const { camera } = useThree();
     const [impactPosition, setImpactPosition] = useState<THREE.Vector3 | null>(null);
     const [localImpactPosition, setLocalImpactPosition] = useState<THREE.Vector3 | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [impactConsequences, setImpactConsequences] = useState<any>(null);
-    const { selectedAsteroidDetails, showConsequences, selectedCity } = useAsteroidStore();
+    const { selectedAsteroidDetails, showConsequences, selectedCity, isMiniGameActive } = useAsteroidStore();
 
     // Determine if Earth should rotate (only when no asteroid is selected)
     const shouldRotate = !selectedAsteroidDetails;
@@ -250,6 +251,16 @@ export default function Earth({ onScenarioSelect, onImpactPointChange, showPin =
                 populationImpact: populationData,
                 detailedPopulationImpact: populationImpact
             });
+
+            // Call impact point change callback
+            onImpactPointChange?.(event.point);
+
+            // If this is a mini-game, trigger the results modal after a short delay
+            if (isMiniGameActive && onMiniGameImpact) {
+                setTimeout(() => {
+                    onMiniGameImpact();
+                }, 2000); // 2 second delay to show explosion first
+            }
         }
     };
 

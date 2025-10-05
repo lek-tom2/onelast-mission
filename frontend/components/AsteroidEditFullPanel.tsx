@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { NEOObject } from '@/components/solar-system/utils';
 import { calculateImpactPrediction, ImpactPrediction } from '@/components/solar-system/utils/impactCalculation';
+import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
 import Slider from './ui/Slider';
 
 interface EditableOrbitalElements {
@@ -38,6 +39,7 @@ export default function AsteroidEditFullPanel({
   });
 
   const [impactPrediction, setImpactPrediction] = useState<ImpactPrediction | null>(null);
+  const { activateMiniGame, isMiniGameActive } = useAsteroidStore();
 
   useEffect(() => {
     if (asteroid) {
@@ -84,12 +86,83 @@ export default function AsteroidEditFullPanel({
     }
   }, [editData, asteroid, onImpactPredictionUpdate]); // Still no currentJulianDate dependency!
 
-  // Monitor closest approach - DISABLED to prevent markers from jumping
+  // Monitor closest approach for mini-game activation
   useEffect(() => {
-    // DISABLED: This was causing close approach markers to jump around during time simulation
-    // Close approach is now calculated once based on orbital parameters, not current time
-    console.log('🔒 Close approach monitoring disabled for stable markers');
-  }, []);
+    if (impactPrediction && asteroid && !isMiniGameActive) {
+      const closestApproachKm = impactPrediction.closestApproach * 149597871; // Convert AU to km
+      
+      if (closestApproachKm < 5000000) { // 5 million km threshold
+        console.log('🚨 CLOSE APPROACH DETECTED:', closestApproachKm.toFixed(0), 'km');
+        console.log('🎮 Activating Mini-Game!');
+        
+        // Calculate asteroid properties for mini-game
+        const asteroidSize = asteroid.size || 100; // meters
+        const velocity = 20; // km/s default
+        const energy = Math.pow(asteroidSize / 100, 3) * 50; // rough energy calculation in megatons
+        
+        activateMiniGame({
+          name: asteroid.name,
+          size: asteroidSize,
+          energy: energy,
+          velocity: velocity
+        });
+        
+        // Show notification
+        showMiniGameNotification();
+      }
+    }
+  }, [impactPrediction, asteroid, isMiniGameActive, activateMiniGame]);
+
+  const showMiniGameNotification = () => {
+    // Show in-app notification
+    const notification = document.createElement('div');
+    notification.innerHTML = `
+      <div style="
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #ff4444, #cc0000);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(255, 68, 68, 0.3);
+        z-index: 10000;
+        max-width: 350px;
+        animation: slideIn 0.5s ease-out;
+      ">
+        <div style="font-size: 24px; margin-bottom: 10px;">🚨 COLLISION COURSE!</div>
+        <div style="font-weight: bold; margin-bottom: 5px;">${asteroid?.name || 'Asteroid'}</div>
+        <div style="font-size: 14px; margin-bottom: 10px;">Distance: < 5 million km</div>
+        <div style="font-size: 12px; opacity: 0.9;">Mini-Game activated!</div>
+        <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">Switch to Earth View to play!</div>
+      </div>
+    `;
+
+    // Add animation keyframes if not exists
+    if (!document.getElementById('minigame-animation-styles')) {
+      const style = document.createElement('style');
+      style.id = 'minigame-animation-styles';
+      style.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(notification);
+
+    // Remove notification after 7 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.style.animation = 'slideIn 0.5s ease-out reverse';
+        setTimeout(() => {
+          notification.remove();
+        }, 500);
+      }
+    }, 7000);
+  };
 
   if (!asteroid) return null;
 

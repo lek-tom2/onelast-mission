@@ -17,6 +17,15 @@ interface AsteroidStore {
   showConsequences: boolean;
   gameMode: GameMode;
 
+  // Mini-game state
+  isMiniGameActive: boolean;
+  miniGameAsteroid: {
+    name: string;
+    size: number; // meters
+    energy: number; // megatons
+    velocity: number; // km/s
+  } | null;
+
   // Filtering and sorting
   sortOption: SortOption;
   filterOption: FilterOption;
@@ -41,6 +50,10 @@ interface AsteroidStore {
   toggleConsequences: () => void;
   generateRandomAsteroids: (count: number) => void;
   setGameMode: (mode: GameMode) => void;
+  
+  // Mini-game actions
+  activateMiniGame: (asteroid: { name: string; size: number; energy: number; velocity: number }) => void;
+  deactivateMiniGame: () => void;
 
   // Filtering and sorting actions
   setSortOption: (option: SortOption) => void;
@@ -70,6 +83,10 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
   showTrajectories: true,
   showConsequences: true,
   gameMode: 'real_orbit',
+
+  // Mini-game state
+  isMiniGameActive: false,
+  miniGameAsteroid: null,
 
   // Filtering and sorting
   sortOption: 'nearest',
@@ -148,5 +165,15 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
     region: string;
     density: number;
   } | null) => set({ selectedCity: city }),
-  setGameMode: (mode) => set({ gameMode: mode })
+  setGameMode: (mode) => set({ gameMode: mode }),
+  
+  // Mini-game actions
+  activateMiniGame: (asteroid) => set({ 
+    isMiniGameActive: true, 
+    miniGameAsteroid: asteroid 
+  }),
+  deactivateMiniGame: () => set({ 
+    isMiniGameActive: false, 
+    miniGameAsteroid: null 
+  })
 }));
