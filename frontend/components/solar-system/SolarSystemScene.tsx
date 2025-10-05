@@ -14,7 +14,7 @@ import { useNEOData } from '@/lib/hooks/useNEOData';
 import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
 import * as THREE from 'three';
 
-export default function SolarSystemScene() {
+export default function SolarSystemScene({ onSwitchToEarthView }: { onSwitchToEarthView?: () => void }) {
   const { neoObjects, loading, error, lastUpdated, refetch } = useNEOData();
   const { gameMode } = useAsteroidStore();
   
@@ -35,6 +35,17 @@ export default function SolarSystemScene() {
   useEffect(() => {
     setNeoData(neoObjects);
   }, [neoObjects]);
+
+  // Monitor close approach distance - AUTO-SWITCH DISABLED
+  useEffect(() => {
+    if (editingAsteroid && impactPrediction && onSwitchToEarthView) {
+      console.log('🎬 Auto-switch monitoring is DISABLED to prevent false triggers');
+      console.log('� Please manually switch to Earth View when you see asteroid approaching');
+      
+      // AUTO-SWITCH DISABLED - no automatic view switching or notifications
+      // User can manually switch views using the ViewSwitcher component
+    }
+  }, [editingAsteroid, impactPrediction, onSwitchToEarthView]);
 
   const handleTimeControlChange = (timeScale: number, playing: boolean) => {
     console.log('⏰ Time control change:', { timeScale, playing });
@@ -123,6 +134,7 @@ export default function SolarSystemScene() {
             targetNEO={targetNEO}
             onResetCamera={handleResetCamera}
             onPlanetTarget={handlePlanetTarget}
+            onPlanetClick={handlePlanetClick}
             neoObjects={neoData}
             onNEOClick={handleNEODoubleClick}
             gameMode={gameMode}

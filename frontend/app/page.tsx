@@ -17,7 +17,11 @@ export default function Home() {
       />
       
       {/* Scene Content */}
-      {currentView === 'earth' ? <SpaceScene /> : <SolarSystemScene />}
+      {currentView === 'earth' ? (
+        <SpaceScene /> 
+      ) : (
+        <SolarSystemScene onSwitchToEarthView={() => setCurrentView('earth')} />
+      )}
     </div>
   );
 }

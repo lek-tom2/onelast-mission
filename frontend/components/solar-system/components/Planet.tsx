@@ -9,6 +9,7 @@ interface PlanetProps {
   planetKey: keyof typeof PLANETARY_ELEMENTS;
   julianDate: number;
   onDoubleClick: (position: THREE.Vector3, planetKey?: keyof typeof PLANETARY_ELEMENTS) => void;
+  onPlanetClick?: (planetKey: keyof typeof PLANETARY_ELEMENTS) => void;
 }
 
 // Map planet keys to texture file names
@@ -26,7 +27,7 @@ const getTextureMap = (planetKey: keyof typeof PLANETARY_ELEMENTS): string => {
   return textureMap[planetKey];
 };
 
-export default function Planet({ planetKey, julianDate, onDoubleClick }: PlanetProps) {
+export default function Planet({ planetKey, julianDate, onDoubleClick, onPlanetClick }: PlanetProps) {
   const planetRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
 
@@ -62,11 +63,16 @@ export default function Planet({ planetKey, julianDate, onDoubleClick }: PlanetP
     onDoubleClick(worldPos, planetKey);
   };
 
+  const handleClick = () => {
+    onPlanetClick?.(planetKey);
+  };
+
   return (
     <group ref={planetRef}>
       {/* Planet */}
       <mesh
         ref={meshRef}
+        onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onPointerOver={() => document.body.style.cursor = 'pointer'}
         onPointerOut={() => document.body.style.cursor = 'default'}

@@ -50,12 +50,16 @@ export default function AsteroidEditFullPanel({
         Omega: asteroid.orbitalElements.Omega[0] || 0
       });
 
-      // Calculate impact prediction
+      // Calculate impact prediction ONLY for asteroid changes, NOT time changes
+      console.log('🎯 Calculating impact prediction for asteroid parameters (ignoring time changes)');
+      
+      // Use current simulation time as starting point for search, but only calculate once per orbit change
+      // This prevents close approach markers from jumping around during time simulation
       const prediction = calculateImpactPrediction(asteroid, currentJulianDate);
       setImpactPrediction(prediction);
       onImpactPredictionUpdate?.(prediction);
     }
-  }, [asteroid, onImpactPredictionUpdate, currentJulianDate]);
+  }, [asteroid, onImpactPredictionUpdate]); // Still no currentJulianDate dependency to prevent recalculation!
 
   // Update impact prediction when editData changes
   useEffect(() => {
@@ -73,40 +77,19 @@ export default function AsteroidEditFullPanel({
         }
       };
 
+      // Use current simulation time for search starting point but don't recalculate on time changes
       const prediction = calculateImpactPrediction(updatedAsteroid, currentJulianDate);
       setImpactPrediction(prediction);
       onImpactPredictionUpdate?.(prediction);
     }
-  }, [editData, asteroid, onImpactPredictionUpdate, currentJulianDate]);
+  }, [editData, asteroid, onImpactPredictionUpdate]); // Still no currentJulianDate dependency!
 
-  // Monitor if closest approach date has passed and recalculate
+  // Monitor closest approach - DISABLED to prevent markers from jumping
   useEffect(() => {
-    if (asteroid && currentJulianDate && impactPrediction?.closestApproachDate) {
-      const closestApproachJD = impactPrediction.closestApproachDate.getTime() / 86400000 + 2440587.5; // Convert to Julian Date
-
-      // If current time has passed the closest approach date, recalculate for the next encounter
-      if (currentJulianDate > closestApproachJD) {
-        console.log('🔄 Closest approach date passed, recalculating next encounter...');
-
-        const updatedAsteroid: NEOObject = {
-          ...asteroid,
-          orbitalElements: {
-            ...asteroid.orbitalElements,
-            a: [editData.a, asteroid.orbitalElements.a[1]],
-            e: [editData.e, asteroid.orbitalElements.e[1]],
-            I: [editData.I, asteroid.orbitalElements.I[1]],
-            L: [editData.L, asteroid.orbitalElements.L[1]],
-            w_bar: [editData.w_bar, asteroid.orbitalElements.w_bar[1]],
-            Omega: [editData.Omega, asteroid.orbitalElements.Omega[1]]
-          }
-        };
-
-        const prediction = calculateImpactPrediction(updatedAsteroid, currentJulianDate);
-        setImpactPrediction(prediction);
-        onImpactPredictionUpdate?.(prediction);
-      }
-    }
-  }, [currentJulianDate, impactPrediction?.closestApproachDate, asteroid, editData, onImpactPredictionUpdate]);
+    // DISABLED: This was causing close approach markers to jump around during time simulation
+    // Close approach is now calculated once based on orbital parameters, not current time
+    console.log('🔒 Close approach monitoring disabled for stable markers');
+  }, []);
 
   if (!asteroid) return null;
 
@@ -227,8 +210,28 @@ export default function AsteroidEditFullPanel({
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Distance in km:</span>
-                <span className="text-white">{(impactPrediction.closestApproach * 149597871).toFixed(0)} km</span>
+                <span className={`font-semibold ${
+                  (impactPrediction.closestApproach * 149597871) < 5000000 
+                    ? 'text-red-400' 
+                    : 'text-white'
+                }`}>
+                  {(impactPrediction.closestApproach * 149597871).toFixed(0)} km
+                </span>
               </div>
+              
+              {/* Close Approach Warning */}
+              {(impactPrediction.closestApproach * 149597871) < 5000000 && (
+                <div className="mt-2 p-2 bg-red-900/50 border border-red-500 rounded text-center">
+                  <div className="text-red-400 font-bold text-sm">🚨 CLOSE APPROACH ALERT</div>
+                  <div className="text-red-300 text-xs">
+                    Distance: {((impactPrediction.closestApproach * 149597871) / 1000000).toFixed(2)} million km
+                  </div>
+                  <div className="text-yellow-300 text-xs mt-1">
+                    ✅ Sufficient for Earth View mode!
+                  </div>
+                </div>
+              )}
+              
               {impactPrediction.impactDate && (
                 <div className="flex justify-between">
                   <span className="text-gray-400">Impact Date:</span>

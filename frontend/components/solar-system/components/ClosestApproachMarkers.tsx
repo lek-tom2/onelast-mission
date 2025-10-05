@@ -1,66 +1,27 @@
 import React, { useMemo } from 'react';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { calculateKeplerianPosition } from '../utils/orbitalMechanics';
 
 interface ClosestApproachMarkersProps {
   earthPosition: { x: number; y: number; z: number };
   asteroidPosition: { x: number; y: number; z: number };
   closestApproachDate: Date | null;
   visible: boolean;
-  currentJulianDate?: number;
-  asteroidElements?: any;
 }
 
 export default function ClosestApproachMarkers({ 
   earthPosition, 
   asteroidPosition, 
   closestApproachDate,
-  visible,
-  currentJulianDate,
-  asteroidElements
+  visible
 }: ClosestApproachMarkersProps) {
   
-  // Calculate dynamic positions based on closest approach date if we have the julian date for it
+  // Use the pre-calculated positions from impactPrediction which are based on updated orbital elements
+  // These positions are already calculated using the correct orbital parameters in AsteroidEditFullPanel
   const dynamicPositions = useMemo(() => {
-    if (!closestApproachDate || !currentJulianDate || !asteroidElements) {
-      return { earth: earthPosition, asteroid: asteroidPosition };
-    }
-
-    // Convert closest approach date to Julian date
-    const closestJD = (closestApproachDate.getTime() / 86400000) + 2440587.5;
-    
-    // Earth orbital elements
-    const earthElements = {
-      name: 'Earth',
-      color: '#4A90E2',
-      size: 1,
-      a: [1.00000261, 0.00000562],
-      e: [0.01671123, -0.00004392],
-      I: [-0.00001531, -0.01294668],
-      L: [100.46457166, 35999.37244981],
-      w_bar: [102.93768193, 0.32327364],
-      Omega: [0.0, 0.0]
-    };
-
-    // Calculate positions at closest approach time
-    const earthPos = calculateKeplerianPosition(earthElements, closestJD);
-    const asteroidPos = calculateKeplerianPosition(asteroidElements, closestJD);
-    
-    const scaleFactor = 4;
-    return {
-      earth: {
-        x: earthPos.x * scaleFactor,
-        y: earthPos.y * scaleFactor,
-        z: earthPos.z * scaleFactor
-      },
-      asteroid: {
-        x: asteroidPos.x * scaleFactor,
-        y: asteroidPos.y * scaleFactor,
-        z: asteroidPos.z * scaleFactor
-      }
-    };
-  }, [earthPosition, asteroidPosition, closestApproachDate, currentJulianDate, asteroidElements]);
+    // Always use the passed positions, which are calculated with updated orbital elements
+    return { earth: earthPosition, asteroid: asteroidPosition };
+  }, [earthPosition, asteroidPosition]);
 
   const lineGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry();
@@ -87,11 +48,10 @@ export default function ClosestApproachMarkers({
 
   if (!visible) return null;
 
-  console.log('🎯 Dynamic marker positions:', {
+  console.log('🎯 Using pre-calculated marker positions:', {
     earth: dynamicPositions.earth,
     asteroid: dynamicPositions.asteroid,
-    closestApproachDate,
-    currentJulianDate
+    closestApproachDate
   });
 
   return (
