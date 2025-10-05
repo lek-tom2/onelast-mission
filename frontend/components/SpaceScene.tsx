@@ -225,7 +225,7 @@ function SceneContent({
   setLaunchingAsteroid: (asteroid: ImpactScenario | null) => void;
   setLaunchHandler: (handler: (scenario: ImpactScenario) => void) => void;
 }) {
-  const { camera } = useThree();
+  const { camera, scene } = useThree();
   const [impactPoint, setImpactPoint] = useState<THREE.Vector3 | null>(null);
   const [showTrajectory, setShowTrajectory] = useState(false);
   const [showExplosion, setShowExplosion] = useState(false);
@@ -242,18 +242,12 @@ function SceneContent({
       const { city } = event.detail;
       console.log('SceneContent: Moving camera to city:', city);
 
-      // Convert lat/lng to 3D position
-      const latRad = (city.lat * Math.PI) / 180;
-      const lngRad = (city.lng * Math.PI) / 180;
-      const cityPosition = new THREE.Vector3(
-        Math.cos(latRad) * Math.cos(lngRad),
-        Math.sin(latRad),
-        Math.cos(latRad) * Math.sin(lngRad)
-      );
+      // Convert lat/lng to 3D position using the same method as the pin
+      const phi = (90 - city.lat) * (Math.PI / 180);
+      const theta = (city.lng + 180) * (Math.PI / 180);
 
       // Animate camera to city position
       const startPosition = camera.position.clone();
-      const endPosition = cityPosition.clone().multiplyScalar(2.5); // Distance from Earth
 
       const duration = 2000; // 2 seconds
       const startTime = Date.now();
@@ -266,6 +260,16 @@ function SceneContent({
         const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         const easedProgress = easeInOutCubic(progress);
 
+        // Calculate city position using the same method as the pin
+        const cityPosition = new THREE.Vector3(
+          -Math.sin(phi) * Math.cos(theta),
+          Math.cos(phi),
+          Math.sin(phi) * Math.sin(theta)
+        );
+
+        // Calculate camera position (at distance from city)
+        const endPosition = cityPosition.clone().multiplyScalar(2.5);
+
         // Interpolate position
         camera.position.lerpVectors(startPosition, endPosition, easedProgress);
 
@@ -275,10 +279,42 @@ function SceneContent({
 
         if (progress < 1) {
           requestAnimationFrame(animateCamera);
+        } else {
+          // After animation, start following Earth's rotation
+          startCameraFollow(city, phi, theta);
         }
       };
 
       animateCamera();
+    };
+
+    // Function to make camera follow Earth's rotation
+    const startCameraFollow = (city: { lat: number; lng: number; name: string; country: string; region: string; density: number }, phi: number, theta: number) => {
+      let isFollowing = true;
+
+      const followEarth = () => {
+        if (!isFollowing) return;
+
+        // Calculate city position using the same method as the pin
+        const cityPosition = new THREE.Vector3(
+          -Math.sin(phi) * Math.cos(theta),
+          Math.cos(phi),
+          Math.sin(phi) * Math.sin(theta)
+        );
+
+        // Update camera to always look at the city (which rotates with Earth)
+        camera.lookAt(cityPosition);
+        camera.updateMatrixWorld();
+
+        requestAnimationFrame(followEarth);
+      };
+
+      followEarth();
+
+      // Stop following after 10 seconds or when new city is selected
+      setTimeout(() => {
+        isFollowing = false;
+      }, 10000);
     };
 
     window.addEventListener('setImpactPoint', handleSetImpactPoint as EventListener);

@@ -226,7 +226,7 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
     };
 
     return (
-        <group>
+        <group name="earth-group">
             {/* Earth Surface */}
             <mesh
                 ref={earthRef}
