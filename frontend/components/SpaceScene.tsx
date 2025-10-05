@@ -230,6 +230,21 @@ function SceneContent({
   const [showTrajectory, setShowTrajectory] = useState(false);
   const [showExplosion, setShowExplosion] = useState(false);
 
+  // Listen for impact point creation events
+  useEffect(() => {
+    const handleSetImpactPoint = (event: CustomEvent) => {
+      const { position, city } = event.detail;
+      console.log('SceneContent: Setting impact point at:', position, 'for city:', city);
+      setImpactPoint(position);
+    };
+
+    window.addEventListener('setImpactPoint', handleSetImpactPoint as EventListener);
+
+    return () => {
+      window.removeEventListener('setImpactPoint', handleSetImpactPoint as EventListener);
+    };
+  }, []);
+
   const handleScenarioSelect = (scenario: ImpactScenario) => {
     useAsteroidStore.getState().selectScenario(scenario);
   };
@@ -398,7 +413,7 @@ export default function SpaceScene() {
   useEffect(() => {
     const handleCameraMove = (event: CustomEvent) => {
       const { city } = event.detail;
-      console.log('Moving camera to city:', city);
+      console.log('SpaceScene: Moving camera to city:', city);
 
       // Convert lat/lng to 3D position
       const latRad = (city.lat * Math.PI) / 180;
@@ -448,10 +463,23 @@ export default function SpaceScene() {
       }
     };
 
+    const handleCreateImpactPoint = (event: CustomEvent) => {
+      const { position, city } = event.detail;
+      console.log('SpaceScene: Creating impact point at:', position, 'for city:', city);
+
+      // Dispatch event to SceneContent to set impact point
+      const impactEvent = new CustomEvent('setImpactPoint', {
+        detail: { position, city }
+      });
+      window.dispatchEvent(impactEvent);
+    };
+
     window.addEventListener('moveCameraToCity', handleCameraMove as EventListener);
+    window.addEventListener('createImpactPoint', handleCreateImpactPoint as EventListener);
 
     return () => {
       window.removeEventListener('moveCameraToCity', handleCameraMove as EventListener);
+      window.removeEventListener('createImpactPoint', handleCreateImpactPoint as EventListener);
     };
   }, []);
 

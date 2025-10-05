@@ -16,7 +16,7 @@ interface AsteroidStore {
   showTrajectories: boolean;
   showConsequences: boolean;
   gameMode: GameMode;
-  
+
   // Filtering and sorting
   sortOption: SortOption;
   filterOption: FilterOption;
@@ -41,7 +41,7 @@ interface AsteroidStore {
   toggleConsequences: () => void;
   generateRandomAsteroids: (count: number) => void;
   setGameMode: (mode: GameMode) => void;
-  
+
   // Filtering and sorting actions
   setSortOption: (option: SortOption) => void;
   setFilterOption: (option: FilterOption) => void;
@@ -70,7 +70,7 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
   showTrajectories: true,
   showConsequences: true,
   gameMode: 'real_orbit',
-  
+
   // Filtering and sorting
   sortOption: 'nearest',
   filterOption: 'all',
@@ -140,6 +140,13 @@ export const useAsteroidStore = create<AsteroidStore>((set) => ({
   // Filtering and sorting actions
   setSortOption: (option) => set({ sortOption: option }),
   setFilterOption: (option) => set({ filterOption: option }),
-  setSelectedCity: (city) => set({ selectedCity: city }),
+  setSelectedCity: (city: {
+    name: string;
+    lat: number;
+    lng: number;
+    country: string;
+    region: string;
+    density: number;
+  } | null) => set({ selectedCity: city }),
   setGameMode: (mode) => set({ gameMode: mode })
 }));

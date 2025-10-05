@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ImpactScenario } from '@/lib/types/asteroid';
 import CitySelector from './CitySelector';
 import { recalculateImpactForCity } from '@/lib/services/impactCalculator';
 import { populationDensityService } from '@/lib/services/populationDensityService';
 import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
+import * as THREE from 'three';
 
 interface AsteroidDetailsPanelProps {
   scenario: ImpactScenario | null;
@@ -26,11 +27,40 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
   const [isLaunching, setIsLaunching] = useState(false);
   const { setSelectedCity: setStoreSelectedCity } = useAsteroidStore();
 
+  // Recalculate casualties when scenario changes
+  useEffect(() => {
+    if (scenario && selectedCity) {
+      console.log('AsteroidDetailsPanel: Recalculating casualties for new scenario:', scenario.name);
+      const recalculated = recalculateImpactForCity(scenario, selectedCity);
+      setCalculatedScenario(recalculated);
+    }
+  }, [scenario, selectedCity]);
+
   // Camera movement function - dispatch event to parent
   const moveCameraToCity = (city: { lat: number; lng: number; name: string }) => {
+    console.log('AsteroidDetailsPanel: Moving camera to city:', city);
     // Dispatch custom event to parent component
     const event = new CustomEvent('moveCameraToCity', {
       detail: { city }
+    });
+    window.dispatchEvent(event);
+  };
+
+  // Create impact point at city location
+  const createImpactPointAtCity = (city: { lat: number; lng: number; name: string }) => {
+    console.log('AsteroidDetailsPanel: Creating impact point at city:', city);
+    // Convert lat/lng to 3D position
+    const latRad = (city.lat * Math.PI) / 180;
+    const lngRad = (city.lng * Math.PI) / 180;
+    const cityPosition = new THREE.Vector3(
+      Math.cos(latRad) * Math.cos(lngRad),
+      Math.sin(latRad),
+      Math.cos(latRad) * Math.sin(lngRad)
+    );
+
+    // Dispatch event to create impact point
+    const event = new CustomEvent('createImpactPoint', {
+      detail: { position: cityPosition, city }
     });
     window.dispatchEvent(event);
   };
@@ -128,6 +158,7 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
           <CitySelector
             selectedCity={selectedCity}
             onCitySelect={(city) => {
+              console.log('AsteroidDetailsPanel: City selected:', city);
               setSelectedCity(city);
               setStoreSelectedCity(city); // Update store for city pin
               if (city) {
@@ -135,6 +166,8 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
                 setCalculatedScenario(recalculated);
                 // Move camera to selected city
                 moveCameraToCity(city);
+                // Create impact point at city location
+                createImpactPointAtCity(city);
               } else {
                 setCalculatedScenario(null);
               }
