@@ -41,8 +41,8 @@ const vector3ToLatLng = (vector: THREE.Vector3) => {
 // Convert lat/lng coordinates to 3D vector (adjusted for texture mapping)
 const latLngToVector3 = (lat: number, lng: number, radius: number = 1.02): THREE.Vector3 => {
     // Convert to radians with adjusted coordinates for texture mapping
-    const latRad = ((lat + 2) * Math.PI) / 180; // Add 2 degrees to latitude to move north
-    const lngRad = ((-lng - 2) * Math.PI) / 180; // Flip longitude and subtract 2 degrees offset
+    const latRad = ((lat + 1.5) * Math.PI) / 180; // Add 1.5 degrees to latitude to move north
+    const lngRad = ((-lng - 0.25) * Math.PI) / 180; // Flip longitude and subtract 0.25 degrees offset
 
     // Spherical to Cartesian conversion
     return new THREE.Vector3(
@@ -203,8 +203,8 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
     const handleEarthClick = (event: any) => {
         event.stopPropagation();
 
-        // Only show impact visualization if an asteroid is selected
-        if (!selectedAsteroidDetails) {
+        // Only show impact visualization if an asteroid is selected and no city is selected
+        if (!selectedAsteroidDetails || selectedCity) {
             return;
         }
 
@@ -248,7 +248,7 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
             <mesh
                 ref={earthRef}
                 onClick={handleEarthClick}
-                onPointerOver={() => document.body.style.cursor = selectedAsteroidDetails ? 'crosshair' : 'default'}
+                onPointerOver={() => document.body.style.cursor = (selectedAsteroidDetails && !selectedCity) ? 'crosshair' : 'default'}
                 onPointerOut={() => document.body.style.cursor = 'default'}
             >
                 <sphereGeometry args={[1, 64, 64]} />

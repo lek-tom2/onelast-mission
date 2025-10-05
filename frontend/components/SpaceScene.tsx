@@ -243,8 +243,8 @@ function SceneContent({
       console.log('SceneContent: Moving camera to city:', city);
 
       // Convert lat/lng to 3D position using the same method as the pin
-      const latRad = ((city.lat + 2) * Math.PI) / 180; // Add 2 degrees to latitude to move north
-      const lngRad = ((-city.lng - 2) * Math.PI) / 180; // Flip longitude and subtract 2 degrees offset
+      const latRad = ((city.lat + 1.5) * Math.PI) / 180; // Add 1.5 degrees to latitude to move north
+      const lngRad = ((-city.lng - 0.25) * Math.PI) / 180; // Flip longitude and subtract 0.25 degrees offset
 
       // Animate camera to city position
       const startPosition = camera.position.clone();

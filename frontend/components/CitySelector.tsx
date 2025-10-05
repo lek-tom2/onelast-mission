@@ -12,7 +12,7 @@ interface City {
 }
 
 interface CitySelectorProps {
-  onCitySelect: (city: City) => void;
+  onCitySelect: (city: City | null) => void;
   selectedCity?: City | null;
 }
 
@@ -47,6 +47,12 @@ export default function CitySelector({ onCitySelect, selectedCity }: CitySelecto
 
   const handleCityClick = (city: City) => {
     onCitySelect(city);
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  const handleSelectNone = () => {
+    onCitySelect(null);
     setIsOpen(false);
     setSearchTerm('');
   };
@@ -105,6 +111,24 @@ export default function CitySelector({ onCitySelect, selectedCity }: CitySelecto
 
           {/* Cities List */}
           <div className="max-h-60 overflow-y-auto">
+            {/* Select None Option */}
+            <button
+              onClick={handleSelectNone}
+              className={`w-full p-3 text-left hover:bg-gray-700/50 transition-colors border-b border-gray-700/30 ${!selectedCity
+                ? 'bg-red-500/20 border-l-4 border-l-red-400'
+                : ''
+                }`}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="text-white font-medium">Select None</div>
+                  <div className="text-sm text-gray-400">
+                    Clear city selection
+                  </div>
+                </div>
+              </div>
+            </button>
+
             {filteredCities.length === 0 ? (
               <div className="p-3 text-gray-400 text-center">
                 No cities found
@@ -115,8 +139,8 @@ export default function CitySelector({ onCitySelect, selectedCity }: CitySelecto
                   key={`${city.name}-${city.country}`}
                   onClick={() => handleCityClick(city)}
                   className={`w-full p-3 text-left hover:bg-gray-700/50 transition-colors border-b border-gray-700/30 last:border-b-0 ${selectedCity?.name === city.name && selectedCity?.country === city.country
-                      ? 'bg-blue-500/20 border-l-4 border-l-blue-400'
-                      : ''
+                    ? 'bg-blue-500/20 border-l-4 border-l-blue-400'
+                    : ''
                     }`}
                 >
                   <div className="flex justify-between items-start">
