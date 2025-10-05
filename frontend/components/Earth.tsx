@@ -38,13 +38,13 @@ const vector3ToLatLng = (vector: THREE.Vector3) => {
     return { lat, lng };
 };
 
-// Convert lat/lng coordinates to 3D vector (basic approach with longitude flip)
+// Convert lat/lng coordinates to 3D vector (adjusted for texture mapping)
 const latLngToVector3 = (lat: number, lng: number, radius: number = 1.02): THREE.Vector3 => {
-    // Convert to radians
-    const latRad = (lat * Math.PI) / 180;
-    const lngRad = (-lng * Math.PI) / 180; // Flip longitude (multiply by -1)
+    // Convert to radians with adjusted coordinates for texture mapping
+    const latRad = ((lat + 2) * Math.PI) / 180; // Add 2 degrees to latitude to move north
+    const lngRad = ((-lng - 2) * Math.PI) / 180; // Flip longitude and subtract 2 degrees offset
 
-    // Basic spherical to Cartesian conversion
+    // Spherical to Cartesian conversion
     return new THREE.Vector3(
         radius * Math.cos(latRad) * Math.cos(lngRad),
         radius * Math.sin(latRad),

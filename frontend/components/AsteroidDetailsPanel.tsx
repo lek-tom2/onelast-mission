@@ -50,8 +50,8 @@ export default function AsteroidDetailsPanel({ scenario, onClose, onLaunch, hasI
   const createImpactPointAtCity = (city: { lat: number; lng: number; name: string }) => {
     console.log('AsteroidDetailsPanel: Creating impact point at city:', city);
     // Convert lat/lng to 3D position using the same method as the pin (radius 1.02)
-    const latRad = ((city.lat) * Math.PI) / 180;
-    const lngRad = ((-city.lng) * Math.PI) / 180; // Flip longitude (multiply by -1)
+    const latRad = ((city.lat - 1) * Math.PI) / 180; // Add 2 degrees to latitude to move north
+    const lngRad = ((-city.lng - 2) * Math.PI) / 180; // Flip longitude and subtract 2 degrees offset
     const radius = 1.02;
     const cityPosition = new THREE.Vector3(
       radius * Math.cos(latRad) * Math.cos(lngRad),
