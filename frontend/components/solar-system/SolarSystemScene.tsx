@@ -14,7 +14,7 @@ import { useNEOData } from '@/lib/hooks/useNEOData';
 import { useAsteroidStore } from '@/lib/stores/useAsteroidStore';
 import * as THREE from 'three';
 
-export default function SolarSystemScene() {
+export default function SolarSystemScene({ onSwitchToEarthView }: { onSwitchToEarthView?: () => void }) {
   const { neoObjects, loading, error, lastUpdated, refetch } = useNEOData();
   const { gameMode } = useAsteroidStore();
   
@@ -35,6 +35,17 @@ export default function SolarSystemScene() {
   useEffect(() => {
     setNeoData(neoObjects);
   }, [neoObjects]);
+
+  // Monitor close approach distance - AUTO-SWITCH DISABLED
+  useEffect(() => {
+    if (editingAsteroid && impactPrediction && onSwitchToEarthView) {
+      console.log('🎬 Auto-switch monitoring is DISABLED to prevent false triggers');
+      console.log('� Please manually switch to Earth View when you see asteroid approaching');
+      
+      // AUTO-SWITCH DISABLED - no automatic view switching or notifications
+      // User can manually switch views using the ViewSwitcher component
+    }
+  }, [editingAsteroid, impactPrediction, onSwitchToEarthView]);
 
   const handleTimeControlChange = (timeScale: number, playing: boolean) => {
     console.log('⏰ Time control change:', { timeScale, playing });
@@ -123,6 +134,7 @@ export default function SolarSystemScene() {
             targetNEO={targetNEO}
             onResetCamera={handleResetCamera}
             onPlanetTarget={handlePlanetTarget}
+            onPlanetClick={handlePlanetClick}
             neoObjects={neoData}
             onNEOClick={handleNEODoubleClick}
             gameMode={gameMode}
@@ -132,9 +144,32 @@ export default function SolarSystemScene() {
         </Suspense>
       </Canvas>
       
-      {/* Game Mode Selector */}
-      <GameModeSelector />
-      
+      {/* Minimalistic Game Mode Selector - Above Timeline */}
+      <div className="fixed bottom-38 left-1/2 transform -translate-x-1/2 z-[100]">
+            <div className="flex space-x-3">
+              <button
+                onClick={() => useAsteroidStore.getState().setGameMode('real_orbit')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  gameMode === 'real_orbit'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
+                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:scale-105'
+                }`}
+              >
+                🛰️ Real Orbit
+              </button>
+              <button
+                onClick={() => useAsteroidStore.getState().setGameMode('destroy_earth')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  gameMode === 'destroy_earth'
+                    ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg scale-105'
+                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:scale-105'
+                }`}
+              >
+                💥 Destroy Earth
+              </button>
+            </div>
+      </div>
+
       {/* Asteroid List Panel for Game Mode - Hide when editing */}
       {!editingAsteroid && (
         <AsteroidListPanel

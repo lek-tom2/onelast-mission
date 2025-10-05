@@ -21,6 +21,7 @@ interface SolarSystemContentProps {
   targetNEO?: NEOObject;
   onResetCamera: () => void;
   onPlanetTarget: (planetKey?: keyof typeof PLANETARY_ELEMENTS | 'sun') => void;
+  onPlanetClick?: (planetKey: keyof typeof PLANETARY_ELEMENTS) => void;
   neoObjects: NEOObject[];
   gameMode: GameMode;
   onNEOClick?: (neo: NEOObject) => void;
@@ -37,6 +38,7 @@ export default function SolarSystemContent({
   targetNEO,
   onResetCamera,
   onPlanetTarget,
+  onPlanetClick,
   neoObjects,
   gameMode,
   onNEOClick,
@@ -131,6 +133,7 @@ export default function SolarSystemContent({
           planetKey={planetKey as keyof typeof PLANETARY_ELEMENTS}
           julianDate={timeState.julianDate}
           onDoubleClick={handleObjectDoubleClick}
+          onPlanetClick={onPlanetClick}
         />
       ))}
       

@@ -30,8 +30,8 @@ export default function SolarSystemCameraController({
   // Track moving target
   useFrame(() => {
     if (controlsRef.current) {
-      if (editingAsteroid && gameMode === 'destroy_earth') {
-        // Editing mode - let user control camera manually, no auto-targeting
+      if (editingAsteroid && gameMode === 'destroy_earth' && !targetPlanetKey && !targetNEO) {
+        // Editing mode - let user control camera manually, but allow targeting if user clicks on planet/NEO
         // This allows free camera movement while editing asteroid trajectory
         if (controlsRef.current) {
           controlsRef.current.update();
