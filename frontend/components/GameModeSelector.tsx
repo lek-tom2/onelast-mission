@@ -1,23 +1,61 @@
 'use client';
 import { useAsteroidStore, GameMode } from '@/lib/stores/useAsteroidStore';
 
-export default function GameModeSelector() {
+interface GameModeSelectorProps {
+  embedded?: boolean;
+}
+
+export default function GameModeSelector({ embedded = false }: GameModeSelectorProps) {
     const { gameMode, setGameMode } = useAsteroidStore();
 
-    const modes: { key: GameMode; label: string; description: string; icon: string }[] = [
-        {
-            key: 'destroy_earth',
-            label: 'Destroy Earth',
-            description: 'Real orbit + course modification controls',
-            icon: '💥'
-        },
+    const modes: { key: GameMode; label: string; description: string; icon: string; gradient: string }[] = [
         {
             key: 'real_orbit',
             label: 'Real Orbit',
             description: 'View real asteroid orbital mechanics only',
-            icon: '🛰️'
+            icon: '🛰️',
+            gradient: 'from-blue-600 to-purple-600'
+        },
+        {
+            key: 'destroy_earth',
+            label: 'Destroy Earth',
+            description: 'Real orbit + course modification controls',
+            icon: '💥',
+            gradient: 'from-red-600 to-orange-600'
         }
     ];
+
+    if (embedded) {
+        return (
+            <div className="space-y-2">
+                {modes.map((mode) => (
+                    <button
+                        key={mode.key}
+                        onClick={() => setGameMode(mode.key)}
+                        className={`w-full p-3 rounded-lg text-left transition-all duration-200 relative overflow-hidden ${
+                            gameMode === mode.key
+                                ? 'bg-gradient-to-r ' + mode.gradient + ' shadow-lg scale-105'
+                                : 'bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/50'
+                        }`}
+                    >
+                        {gameMode === mode.key && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent animate-pulse" />
+                        )}
+                        <div className="flex items-center space-x-3 relative z-10">
+                            <span className="text-xl">{mode.icon}</span>
+                            <div className="flex-1">
+                                <div className="font-semibold text-sm text-white">{mode.label}</div>
+                                <div className="text-xs text-gray-200">{mode.description}</div>
+                            </div>
+                            {gameMode === mode.key && (
+                                <div className="text-white/90 text-lg">✓</div>
+                            )}
+                        </div>
+                    </button>
+                ))}
+            </div>
+        );
+    }
 
     return (
         <div className="fixed bottom-6 right-6 bg-black/90 backdrop-blur-sm rounded-lg p-4 text-white min-w-80 z-40">
@@ -28,12 +66,16 @@ export default function GameModeSelector() {
                     <button
                         key={mode.key}
                         onClick={() => setGameMode(mode.key)}
-                        className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${gameMode === mode.key
-                            ? 'bg-red-600 border-2 border-red-400'
-                            : 'bg-gray-700 hover:bg-gray-600 border-2 border-transparent'
-                            }`}
+                        className={`w-full p-3 rounded-lg text-left transition-all duration-200 relative overflow-hidden ${
+                            gameMode === mode.key
+                                ? 'bg-gradient-to-r ' + mode.gradient + ' shadow-lg'
+                                : 'bg-gray-700 hover:bg-gray-600 border-2 border-transparent'
+                        }`}
                     >
-                        <div className="flex items-center space-x-3">
+                        {gameMode === mode.key && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent animate-pulse" />
+                        )}
+                        <div className="flex items-center space-x-3 relative z-10">
                             <span className="text-2xl">{mode.icon}</span>
                             <div>
                                 <div className="font-semibold text-sm">{mode.label}</div>

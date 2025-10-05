@@ -81,19 +81,6 @@ export default function FancyTimeControls({
             </button>
           )}
         </div>
-
-        {/* Mission Status */}
-        {editingMode && (
-          <div className="mb-3 p-2 rounded-lg text-center bg-blue-900/30 border border-blue-700/50">
-            <div className="text-xs font-semibold">
-              ⏸️ TRAJECTORY PLANNING
-            </div>
-            <div className="text-xs text-gray-300">
-              Use time controls to see trajectory over time
-            </div>
-          </div>
-        )}
-
         {/* Speed Slider */}
         <div className="mb-2">
           <div className="relative">

@@ -132,9 +132,32 @@ export default function SolarSystemScene() {
         </Suspense>
       </Canvas>
       
-      {/* Game Mode Selector */}
-      <GameModeSelector />
-      
+      {/* Minimalistic Game Mode Selector - Above Timeline */}
+      <div className="fixed bottom-38 left-1/2 transform -translate-x-1/2 z-[100]">
+            <div className="flex space-x-3">
+              <button
+                onClick={() => useAsteroidStore.getState().setGameMode('real_orbit')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  gameMode === 'real_orbit'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
+                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:scale-105'
+                }`}
+              >
+                🛰️ Real Orbit
+              </button>
+              <button
+                onClick={() => useAsteroidStore.getState().setGameMode('destroy_earth')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  gameMode === 'destroy_earth'
+                    ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg scale-105'
+                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 hover:scale-105'
+                }`}
+              >
+                💥 Destroy Earth
+              </button>
+            </div>
+      </div>
+
       {/* Asteroid List Panel for Game Mode - Hide when editing */}
       {!editingAsteroid && (
         <AsteroidListPanel

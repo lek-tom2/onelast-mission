@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { NEOObject } from '@/components/solar-system/utils';
 import { calculateImpactPrediction, ImpactPrediction } from '@/components/solar-system/utils/impactCalculation';
+import Slider from './ui/Slider';
 
 interface EditableOrbitalElements {
   a: number;        // semi-major axis (AU)
@@ -173,7 +174,7 @@ export default function AsteroidEditFullPanel({
   console.log('🎯 AsteroidEditFullPanel rendered for:', asteroid.name);
 
   return (
-    <div className="fixed top-6 right-6 bottom-6 w-96 bg-gray-900/98 backdrop-blur-lg rounded-xl border-2 border-gray-600/80 shadow-2xl z-50 flex flex-col">
+    <div className="fixed top-6 right-6 bottom-6 w-[600px] bg-gray-900/98 backdrop-blur-lg rounded-xl border-2 border-gray-600/80 shadow-2xl z-50 flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-gray-700/50">
         <div className="flex items-center justify-between mb-2">
@@ -262,123 +263,94 @@ export default function AsteroidEditFullPanel({
       <div className="flex-1 overflow-y-auto p-4">
         <h3 className="text-lg font-bold text-white mb-4">⚙️ Orbital Parameters</h3>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-6">
           {/* Semi-major axis */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Semi-major Axis (AU)
-            </label>
-            <input
-              type="number"
-              step="0.01"
+            <Slider
+              label="Semi-major Axis"
               value={editData.a}
-              onChange={(e) => handleInputChange('a', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
-
+              onChange={(value) => handleInputChange('a', value)}
+              min={0.1}
+              max={10.0}
+              step={0.01}
+              unit="AU"
+              description="Distance from Sun at semi-major axis. Earth = 1.0 AU"
+              gradient="from-blue-500 to-cyan-500"
             />
-            <div className="text-xs text-gray-500 mt-1">
-              Distance from Sun at semi-major axis. Earth = 1.0 AU
-            </div>
           </div>
 
           {/* Eccentricity */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Eccentricity (0-0.99)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="0.99"
+            <Slider
+              label="Eccentricity"
               value={editData.e}
-              onChange={(e) => handleInputChange('e', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
-
+              onChange={(value) => handleInputChange('e', value)}
+              min={0}
+              max={0.99}
+              step={0.01}
+              description="Oval shape: 0 = circle, 0.99 = very oval"
+              gradient="from-green-500 to-emerald-500"
             />
-            <div className="text-xs text-gray-500 mt-1">
-              Oval shape: 0 = circle, 0.99 = very oval
-            </div>
           </div>
 
           {/* Inclination */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Inclination (degrees)
-            </label>
-            <input
-              type="number"
-              step="1"
-              min="-180"
-              max="180"
+            <Slider
+              label="Inclination"
               value={editData.I}
-              onChange={(e) => handleInputChange('I', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
-
+              onChange={(value) => handleInputChange('I', value)}
+              min={-180}
+              max={180}
+              step={1}
+              unit="°"
+              description="Tilt of orbit relative to Earth's orbit"
+              gradient="from-purple-500 to-pink-500"
             />
-            <div className="text-xs text-gray-500 mt-1">
-              Tilt of orbit relative to Earth&apos;s orbit
-            </div>
           </div>
 
           {/* Mean Longitude */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Mean Longitude (degrees)
-            </label>
-            <input
-              type="number"
-              step="1"
-              min="0"
-              max="360"
+            <Slider
+              label="Mean Longitude"
               value={editData.L}
-              onChange={(e) => handleInputChange('L', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
-
+              onChange={(value) => handleInputChange('L', value)}
+              min={0}
+              max={360}
+              step={1}
+              unit="°"
+              description="Current position in orbit (0-360°)"
+              gradient="from-yellow-500 to-orange-500"
             />
-            <div className="text-xs text-gray-500 mt-1">
-              Current position in orbit (0-360°)
-            </div>
           </div>
 
           {/* Longitude of Perihelion */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Longitude of Perihelion (degrees)
-            </label>
-            <input
-              type="number"
-              step="1"
-              min="0"
-              max="360"
+            <Slider
+              label="Longitude of Perihelion"
               value={editData.w_bar}
-              onChange={(e) => handleInputChange('w_bar', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
-
+              onChange={(value) => handleInputChange('w_bar', value)}
+              min={0}
+              max={360}
+              step={1}
+              unit="°"
+              description="Direction of closest approach to Sun"
+              gradient="from-red-500 to-rose-500"
             />
-            <div className="text-xs text-gray-500 mt-1">
-              Direction of closest approach to Sun
-            </div>
           </div>
 
           {/* Longitude of Ascending Node */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Longitude of Ascending Node (degrees)
-            </label>
-            <input
-              type="number"
-              step="1"
-              min="0"
-              max="360"
+            <Slider
+              label="Longitude of Ascending Node"
               value={editData.Omega}
-              onChange={(e) => handleInputChange('Omega', parseFloat(e.target.value))}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
-
+              onChange={(value) => handleInputChange('Omega', value)}
+              min={0}
+              max={360}
+              step={1}
+              unit="°"
+              description="Rotation of orbit around Sun"
+              gradient="from-indigo-500 to-violet-500"
             />
-            <div className="text-xs text-gray-500 mt-1">
-              Rotation of orbit around Sun
-            </div>
           </div>
         </div>
       </div>
