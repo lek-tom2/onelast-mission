@@ -64,9 +64,10 @@ interface City {
 interface EarthProps {
     onScenarioSelect?: (scenario: ImpactScenario) => void;
     onImpactPointChange?: (point: THREE.Vector3 | null) => void;
+    showPin?: boolean;
 }
 
-export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthProps) {
+export default function Earth({ onScenarioSelect, onImpactPointChange, showPin = true }: EarthProps) {
     const earthRef = useRef<THREE.Mesh>(null);
     const { camera } = useThree();
     const [impactPosition, setImpactPosition] = useState<THREE.Vector3 | null>(null);
@@ -305,7 +306,7 @@ export default function Earth({ onScenarioSelect, onImpactPointChange }: EarthPr
             })()}
 
             {/* City Pin - Shows selected city */}
-            {selectedCity && (
+            {selectedCity && showPin && (
                 <CityPin
                     city={selectedCity}
                 />

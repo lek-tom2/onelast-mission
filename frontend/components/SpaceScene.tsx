@@ -148,7 +148,15 @@ function AsteroidTrajectory({ asteroid, impactPoint }: { asteroid: ImpactScenari
     const elapsed = (Date.now() - startTime.current) / 1000;
     const progress = Math.min(elapsed / trajectoryDuration, 1);
 
+    // Create a curved trajectory with a lower peak
     const currentPos = startPos.clone().lerp(endPos, progress);
+
+    // Add a very subtle curved arc that peaks at 30% of the distance and goes lower
+    const arcHeight = 0.05; // Even smaller arc for very subtle curve
+    const arcProgress = Math.sin(progress * Math.PI); // Creates a smooth arc
+    const arcOffset = new THREE.Vector3(0, arcHeight * arcProgress, 0);
+
+    currentPos.add(arcOffset);
     meshRef.current.position.copy(currentPos);
 
     // Rotation speed based on size (smaller asteroids spin faster)
@@ -160,6 +168,12 @@ function AsteroidTrajectory({ asteroid, impactPoint }: { asteroid: ImpactScenari
     for (let i = 0; i < trailLength; i++) {
       const trailProgress = Math.max(0, progress - i * (0.02 / asteroidSize));
       const trailPos = startPos.clone().lerp(endPos, trailProgress);
+
+      // Apply the same curved arc to the trail
+      const trailArcProgress = Math.sin(trailProgress * Math.PI);
+      const trailArcOffset = new THREE.Vector3(0, arcHeight * trailArcProgress, 0);
+      trailPos.add(trailArcOffset);
+
       positions[i * 3] = trailPos.x;
       positions[i * 3 + 1] = trailPos.y;
       positions[i * 3 + 2] = trailPos.z;
@@ -229,6 +243,7 @@ function SceneContent({
   const [impactPoint, setImpactPoint] = useState<THREE.Vector3 | null>(null);
   const [showTrajectory, setShowTrajectory] = useState(false);
   const [showExplosion, setShowExplosion] = useState(false);
+  const [showPin, setShowPin] = useState(true);
 
   // Listen for impact point creation events
   useEffect(() => {
@@ -379,6 +394,7 @@ function SceneContent({
     setLaunchingAsteroid(scenario);
     setShowTrajectory(true);
     setShowExplosion(false);
+    setShowPin(false); // Hide pin when launching
 
     // Wait for asteroid to reach impact point (dynamic duration)
     await new Promise(resolve => setTimeout(resolve, trajectoryDuration));
@@ -395,6 +411,11 @@ function SceneContent({
     setShowExplosion(false);
     // The impact visualization will automatically show because the impact point is already set
     // and showConsequences should be true
+
+    // Phase 4: Show pin again after 2 seconds
+    setTimeout(() => {
+      setShowPin(true);
+    }, 2000);
   };
 
   // Register the launch handler
@@ -437,6 +458,7 @@ function SceneContent({
       <Earth
         onScenarioSelect={handleScenarioSelect}
         onImpactPointChange={setImpactPoint}
+        showPin={showPin}
       />
 
       {/* Asteroid Field (visible when zoomed out) */}
